@@ -36,9 +36,15 @@ class Importer:
         
     
         etas_find = raw_str.index("#VECTOR:LOWER_LEFT")
-        etas_left = dim_right+len("#VECTOR:ETA#BEGIN:2 ")
-        etas_right = etas_find-len("#END ") 
-        con.state_space_etas = raw_str[etas_left:etas_right]
+        etas_left_1 = dim_right+len("#VECTOR:ETA#BEGIN:2 ")
+                                 
+        etas_right_2 = etas_find-len("#END ")
+        etas_left_2 = int((etas_left_1+etas_right_2)/2)
+        etas_right_1 = etas_left_2
+                                   
+        etas_left = raw_str[etas_left_1:etas_left_2]
+        etas_right = raw_str[etas_right_1:etas_right_2]
+        con.state_space_etas = [float(etas_left), float(etas_right)]
         
         print("These are the etas of the controller:", con.state_space_etas)
         
@@ -47,16 +53,20 @@ class Importer:
         bounds_lower_left_right = bounds_find - len("#END ")                                     
         bounds_upper_right_left = bounds_find+ len("#VECTOR:UPPER_RIGHT#BEGIN:2 ")
         bounds_upper_right_right = raw_str.index("#SCOTS:INPUT_SPACE")-len("#END ")
-                      
-        print(int((bounds_lower_left_left+bounds_lower_left_right)/2))                                      
-                                                 
-        #bounds_lower_left = [raw_str[bounds_lower_left_left:(bounds_lower_left_left+bounds_lower_left_right)/2],raw_str[(bounds_lower_left_left+bounds_lower_left_right)/2:bounds_lower_left_right]]
-        #bounds_upper_right = raw_str[bounds_upper_right_left:bounds_upper_right_right]
-        #print(bounds_lower_left, bounds_upper_right)                           
-                                                 
-        #con.state_space_borders = [bounds_lower_left,bounds_upper_right]
+                                                                      
+        bounds_lower_left_1 = raw_str[bounds_lower_left_left:int((bounds_lower_left_left+bounds_lower_left_right)/2)] 
+        bounds_lower_left_2 = raw_str[int((bounds_lower_left_left+bounds_lower_left_right)/2):bounds_lower_left_right]
+ 
+        bounds_lower_left = [float(bounds_lower_left_1),float(bounds_lower_left_2)]
         
-        #print("These are the bounds of the controller:", con.state_space_borders)
+        bounds_upper_right_1 = raw_str[bounds_upper_right_left:int((bounds_upper_right_right+bounds_upper_right_left)/2)]
+        bounds_upper_right_2 = raw_str[int((bounds_upper_right_right+bounds_upper_right_left)/2):bounds_upper_right_right]
+        
+        bounds_upper_right = [float(bounds_upper_right_1), float(bounds_upper_right_2)]
+                                                                        
+        con.state_space_borders = [bounds_lower_left,bounds_upper_right]
+        
+        print("These are the borders of the controller:", con.state_space_borders)
         
 
         return con
