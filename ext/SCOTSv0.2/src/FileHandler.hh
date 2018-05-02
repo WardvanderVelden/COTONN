@@ -75,6 +75,13 @@ public:
   void close() {
     m_file.close();
   }
+  bool add_PLAIN(const std::string& text) {
+    if(m_file.is_open()) {
+      m_file << text;
+      return true;
+    }
+    return false;
+  }
   bool add_TEXT(const std::string& text) {
     if(m_file.is_open()) {
       m_file << SCOTS_FH_KEY << text <<"\n";
