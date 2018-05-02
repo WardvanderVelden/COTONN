@@ -28,7 +28,7 @@ class PlainController:
 
 	# Return input at state space from discrete state variables
 	def getInputFromState(self, state):
-		return getIdFromState(self.getInputFromId(state)) 
+		return self.getIdFromState(self.getInputFromId(state)) 
 
 
 	# Initialize a plain controller

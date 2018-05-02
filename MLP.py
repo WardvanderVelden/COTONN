@@ -6,8 +6,8 @@ Created on Mon Apr 30 19:57:18 2018
 """
 from __future__ import print_function
 import tensorflow as tf
-import matplotlib.pyplot as plt
-import numpy as np
+# import matplotlib.pyplot as plt
+# import numpy as np
 
 class MLP:
       def __init__(self):
@@ -82,7 +82,7 @@ class MLP:
             
             # Predictions
             pred_classes = tf.argmax(logits, axis=1)
-            pred_probas = tf.nn.softmax(logits)
+            # pred_probas = tf.nn.softmax(logits)
       
             # If prediction mode, early return
             if mode == tf.estimator.ModeKeys.PREDICT:
