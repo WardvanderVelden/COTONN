@@ -5,11 +5,11 @@ class PlainController:
 	def __init__(self):
 		self.state_space_dim = None
 		self.state_space_etas = None
-		self.state_space_borders = None
+		self.state_space_bounds = None
 
 		self.input_space_dim = None
 		self.input_space_etas = None
-		self.input_space_borders = None
+		self.input_space_bounds = None
 
 		self.state_space = None
 		self.input_space = None
@@ -28,14 +28,14 @@ class PlainController:
 
 	# Return input at state space from discrete state variables
 	def getInputFromState(self, state):
-		return getIdFromState(self.getInputFromId(state)) 
+		return self.getIdFromState(self.getInputFromId(state)) 
 
 
 	# Initialize a plain controller
 	def initializePlainController(self, ssd, sse, ssb, isd ,ise, isb, ss, iss):
 		self.state_space_dim = ssd
 		self.state_space_etas = sse
-		self.state_space_borders = ssb
+		self.state_space_bounds = ssb
 		self.state_space = ss
 
 		self.input_space_dim = isd

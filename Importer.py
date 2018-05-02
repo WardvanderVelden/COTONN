@@ -7,6 +7,10 @@ import numpy as np
 class Importer:
       def __init__(self):
         self.filename = None
+        self.debug_mode = False
+        
+    def setDebugMode(self, value):
+        self.debug_mode = value
 
       # Read a plain controller into a format with which we can work in python
       def readPlainController(self, filename):
@@ -83,7 +87,3 @@ class Importer:
             line = self.raw_str[dim_left:dim_right]
             #print("Line found = ", line)
             return line
-      
-
-            
-
