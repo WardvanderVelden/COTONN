@@ -1,7 +1,7 @@
 # Class which will handle all the work done on neural networks and will contain all the functions which
 # are called in tensorflow in order to generate neural networks from the controllers.
 
-from MLP import MLP
+from MLP2 import MLP
 from BinaryEncoderDecoder import BinaryEncoderDecoder
 from enum import Enum
 
@@ -92,7 +92,10 @@ class NeuralNetworkManager:
         self.nn.setNeurons(self.estimateHiddenNeurons(3))   
         
         # initialize nn in itself
-        self.nn.initialize()
+        # self.nn.initializeNetwork()
+        self.nn.tensorFlowTest()
+        
+        # set training method
         
         
     def train(self):
