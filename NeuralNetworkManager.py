@@ -6,15 +6,23 @@ from BinaryEncoderDecoder import BinaryEncoderDecoder
 from enum import Enum
 
 class NNTypes(Enum):
-    MLP = 1
-    RBF = 2
-    CMLP = 3
+      MLP = 1
+      RBF = 2
+      CMLP = 3
     
-class NNTrainingMethods(Enum):
-    Adagrad = 1
-    Adadelta = 2
-    Adam = 3
-    Gradient_Descent = 4
+class NNOptimizer(Enum):
+      Gradient_Descent = 1
+      Adagrad = 2
+      Adadelta = 3
+      Adam = 4
+      Ftrl = 5
+      Momentum = 6
+      RMSProp =7    
+    
+class NNActivationFunction(Enum):
+      Sigmoid = 1
+      Relu = 2
+      Linear = 3
 
 class NeuralNetworkManager:
     def __init__(self):
@@ -88,12 +96,7 @@ class NeuralNetworkManager:
             self.nn.train()
         
             
-        
-        
-        
-        
-        
-        
+
         
  
 
