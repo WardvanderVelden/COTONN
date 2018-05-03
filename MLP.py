@@ -20,20 +20,20 @@ class MLP:
             self.num_classes = 10
      
       def setLearningRate(self, value): self.learning_rate = value
-      def setNum_steps(self, value): self.num_steps = value
-      def setBatch_size(self, value): self.batch_size = value
-      def setDisplay_step(self, value): self.display_step = value
-      def setNeurons_layer(self, value): self.n_layer = value
-      def setNum_input(self, value): self.num_input = value
-      def setNum_classes(self, value): self.num_classes = value
+      def setNumSteps(self, value): self.num_steps = value
+      def setBatchSize(self, value): self.batch_size = value
+      def setDisplayStep(self, value): self.display_step = value
+      def setNeurons(self, value): self.n_layer = value
+      def setNumInput(self, value): self.num_input = value
+      def setNumClasses(self, value): self.num_classes = value
       
       def getLearningRate(self): return self.learning_rate
-      def getNum_steps(self, value): return self.num_steps
-      def getBatch_size(self, value): return self.batch_size
-      def getDisplay_step(self, value): return self.display_step
-      def getNeurons_layer(self, value): return self.n_layer 
-      def getNum_input(self, value): return self.num_input
-      def getNum_classes(self, value): return self.num_classes
+      def getNumSteps(self, value): return self.num_steps
+      def getBatchSize(self, value): return self.batch_size
+      def getDisplayStep(self, value): return self.display_step
+      def getNeurons(self, value): return self.n_layer 
+      def getNumInput(self, value): return self.num_input
+      def getNumClasses(self, value): return self.num_classes
       
       
       #Define the input function for training
@@ -108,7 +108,7 @@ class MLP:
                   eval_metric_ops={'accuracy': acc_op})
             return estim_specs
       
-      def BuildNN(self, data): 
+      def buildNN(self, data): 
                   model = tf.estimator.Estimator(self.model_fn)
                   model.train(self.setInputFunction(data))
                   NN_evaluation = model.evaluate(self.setInputFunction(data))

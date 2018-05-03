@@ -1,28 +1,33 @@
 from Importer import Importer
 from NeuralNetworkManager import NeuralNetworkManager
+from BinaryEncoderDecoder import BinaryEncoderDecoder
+from StaticController import StaticController
+
 from NeuralNetworkManager import NNTypes
-# from NeuralNetworkManager import NNTrainingMethods
+from NeuralNetworkManager import NNTrainingMethods
 
 # Main class from which all functions are called
 class COTONN:
     def __init__(self):
         self.importer = Importer()
-        self.nn = NeuralNetworkManager()
-        self.plainController = None
+        self.nnm = NeuralNetworkManager()
+        self.bed = BinaryEncoderDecoder()
+        self.staticController = StaticController()
         
-        self.debug_mode = False
+        self.debug_mode = True
         
-        self.importer.setDebugMode(self.debug_mode)
+        self.importer.setDebugMode(False) # Disable debug mode for the importer to prevent intermediate import results
+        self.nnm.setDebugMode(self.debug_mode)
 
     # Test function to automatically convert a plain controller to a simple MLP network
-    def controllerToMLP(self, filename):
-        self.plainController = self.importer.readPlainController(filename)
-        self.nn.setNeuralNetworkType(NNTypes.MLP)
+    def test(self):
+        # read static controller
+        filename = "controllers/dcdc/controller"
+        self.staticController = self.importer.readStaticController(filename)
         
+        # initialize neural network
+        self.nnm.initialize(NNTypes.MLP, NNTrainingMethods.Gradient_Descent, self.staticController)
 
 cotonn = COTONN()
-cotonn.controllerToMLP("controllers/dcdc/controller")
-
-if (cotonn.nn.nn_type == NNTypes.RBF):
-    print("We are training a MLP topology network!")
+cotonn.test()
 

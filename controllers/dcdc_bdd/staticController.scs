@@ -37,7 +37,8 @@
 #END
 #TYPE:WINNINGDOMAIN
 #SCOTS:i (state) j_0 ... j_n (valid inputs)
-#MATRIX:DATA:10201 2
+#MATRIX:DATA
+#BEGIN:10201 2
 70 1
 71 1
 72 1
