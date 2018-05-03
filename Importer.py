@@ -1,4 +1,4 @@
-from PlainController import PlainController
+from StaticController import StaticController
 import numpy as np
 
 # Importer class which will be responsible for reading in controller files and formatting them 
@@ -6,14 +6,14 @@ import numpy as np
 # training data
 class Importer:
       def __init__(self):
-        self.filename = None
-        self.debug_mode = False
+            self.filename = None
+            self.debug_mode = False
         
-    def setDebugMode(self, value):
-        self.debug_mode = value
+      def setDebugMode(self, value):
+            self.debug_mode = value
 
-      # Read a plain controller into a format with which we can work in python
-      def readPlainController(self, filename):
+      # Read a static controller into a format with which we can work in python
+      def readStaticController(self, filename):
             self.filename = filename
             file = open(filename + ".scs",'r')
 
@@ -21,69 +21,69 @@ class Importer:
                   print("Unable to open " + filename + ".scs")
             
             self.raw_str = file.read()   
-            con = PlainController()
+            ctl = StaticController()
             
             # Retrieve parameters of the STATE_SPACE
             # Retrieve the number of dimensions from the text file
-            con.state_space_dim = self.getLine("MEMBER:DIM\n", "\n#VECTOR:ETA\n")
-            print("This is the dimension of the SPACE_STATE:\n", con.state_space_dim)
+            ctl.setStateSpaceDim(self.getLine("MEMBER:DIM\n", "\n#VECTOR:ETA\n"))
+            if(self.debug_mode):
+                print("This is the dimension of the SPACE_STATE:\n", ctl.getStateSpaceDim())
             
-            # Retrieve the number of eta's from the text file
-            con.state_space_etas = self.getLine(("#VECTOR:ETA\n#BEGIN:" + con.state_space_dim + "\n"), "\n#END")
-            con.state_space_etas = con.state_space_etas.split('\n')  
-            print("These are the etas of the SPACE_STATE:\n", con.state_space_etas)
+            # Retrieve the number of eta's from the text file 
+            ctl.setStateSpaceEtas(self.getLine(("#VECTOR:ETA\n#BEGIN:" + ctl.getStateSpaceDim() + "\n"), "\n#END").split('\n'))
+            if(self.debug_mode):
+                print("These are the etas of the SPACE_STATE:\n", ctl.getStateSpaceEtas())
             
             # Retrieve the borders from the text file
-            state_border1 = self.getLine("#VECTOR:LOWER_LEFT\n#BEGIN:" + con.state_space_dim + "\n", "#END\n#VECTOR:UPPER_RIGHT")
-            state_border2 = self.getLine("#VECTOR:UPPER_RIGHT\n#BEGIN:" + con.state_space_dim + "\n", "\n#END\n#SCOTS:INPUT_SPACE")
-            state_space_borders = state_border1 + state_border2
-            state_space_borders = state_space_borders.split('\n')
-            state_space_borders = np.array(state_space_borders)
-            shape_state_space = (int(len(state_space_borders)/2), 2)
-            con.state_space_borders = state_space_borders.reshape(shape_state_space)
-            print("These are the borders of the SPACE_STATE:\n", con.state_space_borders)
-            
+            state_bound1 = self.getLine("#VECTOR:LOWER_LEFT\n#BEGIN:" + ctl.getStateSpaceDim() + "\n", "#END\n#VECTOR:UPPER_RIGHT")
+            state_bound2 = self.getLine("#VECTOR:UPPER_RIGHT\n#BEGIN:" + ctl.getStateSpaceDim() + "\n", "\n#END\n#SCOTS:INPUT_SPACE")
+            state_space_bounds = state_bound1 + state_bound2
+            state_space_bounds = state_space_bounds.split('\n')
+            state_space_bounds = np.array(state_space_bounds)
+            shape_state_space = (int(len(state_space_bounds)/2), 2)
+            ctl.setStateSpaceBounds(state_space_bounds.reshape(shape_state_space))
+            if(self.debug_mode):                
+                print("These are the bounds of the SPACE_STATE:\n", ctl.getStateSpaceBounds())
             
             # Now the same as above for the INPUT_SPACE
             self.raw_str = self.raw_str[self.raw_str.index("#SCOTS:INPUT_SPACE"):]
             
-            con.input_space_dim = self.getLine("#TYPE:UNIFORMGRID\n#MEMBER:DIM\n", "\n#VECTOR:ETA")
-            print("This is the dimension of the INPUT_SPACE:\n", con.input_space_dim)
+            ctl.setInputSpaceDim(self.getLine("#TYPE:UNIFORMGRID\n#MEMBER:DIM\n", "\n#VECTOR:ETA"))
+            if(self.debug_mode):
+                print("This is the dimension of the INPUT_SPACE:\n", ctl.getInputSpaceDim())
             
             # Retrieve the number of eta's from the text file
-            con.input_space_etas = self.getLine(("#VECTOR:ETA\n#BEGIN:" + con.input_space_dim + "\n"), "\n#END")
-            con.input_space_etas = con.input_space_etas.split('\n')  
-            print("These are the etas of the INPUT_SPACE:\n", con.input_space_etas)
+            ctl.setInputSpaceEtas(self.getLine(("#VECTOR:ETA\n#BEGIN:" + ctl.getInputSpaceDim() + "\n"), "\n#END").split('\n'))
+            if(self.debug_mode):
+                print("These are the etas of the INPUT_SPACE:\n", ctl.getInputSpaceEtas())
             
             # Retrieve the borders from the text file
-            input_border1 = self.getLine("#VECTOR:LOWER_LEFT\n#BEGIN:" + con.input_space_dim + "\n", "#END\n#VECTOR:UPPER_RIGHT")
-            input_border2 = self.getLine("#VECTOR:UPPER_RIGHT\n#BEGIN:" + con.input_space_dim + "\n", "\n#END\n#TYPE:WINNINGDOMAIN")
-            input_space_borders = input_border1 + input_border2
-            input_space_borders = input_space_borders.split('\n')   
-            input_space_borders = np.array(input_space_borders)
-            shape_input_space = (int(len(input_space_borders)/2), 2)
-            con.input_space_borders = input_space_borders.reshape(shape_input_space)             
-            print("These are the borders of the INPUT_SPACE:\n", con.input_space_borders)
+            input_bound1 = self.getLine("#VECTOR:LOWER_LEFT\n#BEGIN:" + ctl.getInputSpaceDim() + "\n", "#END\n#VECTOR:UPPER_RIGHT")
+            input_bound2 = self.getLine("#VECTOR:UPPER_RIGHT\n#BEGIN:" + ctl.getInputSpaceDim() + "\n", "\n#END\n#TYPE:WINNINGDOMAIN")
+            input_space_bounds = input_bound1 + input_bound2
+            input_space_bounds = input_space_bounds.split('\n')   
+            input_space_bounds = np.array(input_space_bounds)
+            shape_input_space = (int(len(input_space_bounds)/2), 2) 
+            ctl.setInputSpaceBounds(input_space_bounds.reshape(shape_input_space))          
+            if(self.debug_mode):
+                print("These are the bounds of the INPUT_SPACE:\n", ctl.getInputSpaceBounds())
             
             # Now we extract the matrix data from the text file
             matrix_data = self.raw_str[self.raw_str.index("#MATRIX:DATA"):]
             matrix_data = matrix_data.split(' \n')                                               
             matrix_data = matrix_data[2:]
-            print(matrix_data[:20])
-            con.state_space = []
-            con.input_space = []
             for i in range(len(matrix_data)-1):
                   single_string = matrix_data[i]
                   split_data = single_string.split()
-                  con.state_space.append(split_data[0])
-                  con.input_space.append(split_data[1])
-            #print(con.state_space[:100], con.input_space[:100])
-            return con
+                  ctl.setStateInput(split_data[0], split_data[1])
+                  if(i%1000 == 0 and self.debug_mode):
+                      print("SS: " + split_data[0] + " IS: " + split_data[1])
+                  
+            return ctl
       
       # Function used to retrieve specific information from the text file. 
       def getLine(self, left, right):
             dim_left = self.raw_str.index(left)+len(left)
             dim_right = self.raw_str.index(right)
             line = self.raw_str[dim_left:dim_right]
-            #print("Line found = ", line)
             return line

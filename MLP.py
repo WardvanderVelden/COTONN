@@ -62,7 +62,7 @@ class MLP:
             out_layer = tf.layers.dense(hidden_layers[-1], self.num_classes)
             out_layer = self.activationFunction(out_layer)
             return out_layer
-            
+                      
       def generateModelFunction(self, features, targets, mode, params):
             # Logic to do the following:
             # 1. Configure the model via TensorFlow operations
@@ -122,8 +122,6 @@ class MLP:
             if self.optimizer_type == NNOptimizer.RMSProp:
                   self.optimizerFunction = "RMSProp"
             return self.optimizerFunction  
-
-
 
       def train(self, data):
             nn = tf.contrib.learn.Estimator(model_fn=self.generateModelFunction, params = self.learning_rate)

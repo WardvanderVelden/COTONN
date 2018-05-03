@@ -7,14 +7,18 @@
 /*
 	This parameters need to be changed in order to operate the converter
 */
-const std::string controller_filename = "../controllers/dcdc_bdd/controller";
-const std::string new_controller_filename = "staticController";
+const std::string controller_filename = "../../Scots2C/controllers/dcdc_bdd/controller";
+const std::string new_controller_filename = "../../Scots2C/controllers/dcdc_bdd/newStaticController";
 const int state_dim = 2;
 const int input_dim = 1;
 
 
 /*
-	The functional program
+	TODO:
+	- Make sure behaviour is absolutely the same as bdd controller for v1.01
+	- Put functions in separate class
+	- Order write file function
+	- (Make write file function independent of lib (so lib can be updated without breaking the converter))
 */
 const bool debug_mode = false;
 
@@ -22,12 +26,13 @@ using state_type = std::array<double,state_dim>;
 using input_type = std::array<double,input_dim>;
 
 struct ControllerPoint {
-	unsigned int ss_id;
-	unsigned int is_id;
+	unsigned int state; // state id
+	unsigned int input; // input id
+	ControllerPoint(unsigned int s, unsigned int i) : state(s), input(i) { }
 };
 
-bool sort_new_controller(ControllerPoint a, ControllerPoint b) {
-	return (a.ss_id < b.ss_id);
+bool sort_winning_domain(ControllerPoint a, ControllerPoint b) {
+	return (a.state < b.state);
 }
 
 void print(std::string text) {
@@ -57,7 +62,7 @@ void get_bounds_and_etas(scots::SymbolicSet &controller, state_type &ss_lb, stat
 }
 
 // Find and return the uniform grids that are associated with the controller
-void get_uniformgrids(scots::SymbolicSet &controller, scots::UniformGrid &ss, scots::UniformGrid &is) {
+void get_uniform_grids(scots::SymbolicSet &controller, scots::UniformGrid &ss, scots::UniformGrid &is) {
 	state_type ss_lb, ss_ub, ss_eta;
 	input_type is_lb, is_ub, is_eta;
 	get_bounds_and_etas(controller, ss_lb, ss_ub, ss_eta, is_lb, is_ub, is_eta);
@@ -71,8 +76,33 @@ void get_uniformgrids(scots::SymbolicSet &controller, scots::UniformGrid &ss, sc
 	}
 }
 
-// write a new controller using the old symbolic set controller and the newly formatted controller
-bool write_new_controller(scots::SymbolicSet &controller, std::vector<ControllerPoint> &n_controller, scots::UniformGrid &ss, scots::UniformGrid &is, bool append_to_file = false) {
+// Find the winning domain from the controller, bdd, state space and input space
+std::vector<ControllerPoint> find_winning_domain(scots::SymbolicSet &controller, Cudd &manager, BDD &bdd, scots::UniformGrid &ss, scots::UniformGrid &is) {
+	std::vector<ControllerPoint> winning_domain;
+
+	auto size = ss.size();
+	for(unsigned int s = 0; s < size; s++) {
+		// read x at state
+		state_type x;
+		ss.itox(s, x);
+
+		// read input u at that state x
+		auto u = controller.restriction(manager, bdd, x);
+
+		// check if state is in winning domain
+		if(!u.empty()) {
+			// read input id from input x
+			auto i = is.xtoi(u);
+
+			// add controllerpoint to winning_domain
+			winning_domain.push_back(ControllerPoint(s, i));
+		}
+	}
+	return winning_domain;
+}
+
+// Write a new controller using the old symbolic set controller and the newly formatted controller
+bool write_new_controller(scots::SymbolicSet &controller, std::vector<ControllerPoint> &winning_domain, scots::UniformGrid &ss, scots::UniformGrid &is, bool append_to_file = false) {
 	scots::FileWriter writer(new_controller_filename);
 	if(append_to_file) {
         if(!writer.open()) {
@@ -128,8 +158,8 @@ bool write_new_controller(scots::SymbolicSet &controller, std::vector<Controller
     writer.add_PLAIN("#TYPE:WINNINGDOMAIN\n#SCOTS:i (state) j_0 ... j_n (valid inputs)\n#MATRIX:DATA\n");
     writer.add_PLAIN("#BEGIN:" + std::to_string(ss.size()) + " " + std::to_string(is.size()) + "\n");
 
-    for(unsigned int i = 0; i < n_controller.size(); i++) {
-    	writer.add_PLAIN(std::to_string(n_controller[i].ss_id) + " " + std::to_string(n_controller[i].is_id) + "\n");
+    for(unsigned int i = 0; i < winning_domain.size(); i++) {
+    	writer.add_PLAIN(std::to_string(winning_domain[i].state) + " " + std::to_string(winning_domain[i].input) + "\n");
     }
 
     writer.add_PLAIN("#END");
@@ -140,7 +170,7 @@ bool write_new_controller(scots::SymbolicSet &controller, std::vector<Controller
 }
 
 int main() {
-	print("Controller converter v1.0");
+	print("Controller converter v1.01");
 	Cudd manager;
 	BDD bdd;
 	scots::SymbolicSet controller;
@@ -154,41 +184,23 @@ int main() {
 	// init uniform grid state and input space
 	scots::UniformGrid ss;
 	scots::UniformGrid is;
-	get_uniformgrids(controller, ss, is);
+	get_uniform_grids(controller, ss, is);
 
-	// find state space ids and size
-	auto ss_ids = controller.bdd_to_id(manager, bdd); // get all state space ids that are encoded in the bdd
-	auto size = ss_ids.size();
+	// Find winning domain
+	std::vector<ControllerPoint> winning_domain = find_winning_domain(controller, manager, bdd, ss, is);
 
-	// init input and state space id array
-	std::vector<ControllerPoint> n_controller(size);
-
-	// find corresponding input and state id for every state id in BDD
-	for(unsigned int i = 0; i < size; i++) {
-		// get state space x
-		state_type ss_x;
-		controller.itox(ss_ids[i], ss_x);
-
-		// get input space x
-		auto is_x = controller.restriction(manager, bdd, ss_x);
-
-		// get state space id
-		n_controller[i].ss_id = ss.xtoi(ss_x);
-		n_controller[i].is_id = is.xtoi(is_x);
-	}
-
-	// sort new controller by ss_id
-	std::sort(begin(n_controller), end(n_controller), sort_new_controller);
+	// sort winning domain
+	std::sort(begin(winning_domain), end(winning_domain), sort_winning_domain);
 
 	// print if in debug mode
 	if(debug_mode) {
-		for(unsigned int i = 0; i < size; i += 100) {
-			print("SS: " + std::to_string(n_controller[i].ss_id) + " IS: " + std::to_string(n_controller[i].is_id));
+		for(unsigned int i = 0; i < winning_domain.size(); i += 100) {
+			print("SS: " + std::to_string(winning_domain[i].state) + " IS: " + std::to_string(winning_domain[i].input));
 		}
 	}
 
 	// write out new controller
-	if(write_new_controller(controller, n_controller, ss, is)) {
+	if(write_new_controller(controller, winning_domain, ss, is)) {
 		print("Converter controller to static controller and written to: " + new_controller_filename + ".scs");
 	} else {
 		print("An error occured while writing the controller.");
