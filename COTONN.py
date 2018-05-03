@@ -4,7 +4,7 @@ from BinaryEncoderDecoder import BinaryEncoderDecoder
 from StaticController import StaticController
 
 from NeuralNetworkManager import NNTypes
-from NeuralNetworkManager import NNTrainingMethods
+from NeuralNetworkManager import NNOptimizer
 
 # Main class from which all functions are called
 class COTONN:
@@ -26,7 +26,10 @@ class COTONN:
         self.staticController = self.importer.readStaticController(filename)
         
         # initialize neural network
-        self.nnm.initialize(NNTypes.MLP, NNTrainingMethods.Gradient_Descent, self.staticController)
+        self.nnm.initialize(NNTypes.MLP, NNOptimizer.Gradient_Descent, self.staticController)
+        
+        # train neural network
+        #self.nnm.train()
 
 cotonn = COTONN()
 cotonn.test()

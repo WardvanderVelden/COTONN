@@ -87,9 +87,13 @@ class NeuralNetworkManager:
         if(self.type == NNTypes.MLP):
             self.nn = MLP()
             
+        # initialize layers in nn    
         self.calculateIONeurons()
+        self.nn.setNeurons(self.estimateHiddenNeurons(3))   
         
-        print(self.estimateHiddenNeurons(3))        
+        # initialize nn in itself
+        self.nn.initialize()
+        
         
     def train(self):
         if(self.nn != None):
