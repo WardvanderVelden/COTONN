@@ -1,6 +1,7 @@
 import tensorflow as tf
 import NeuralNetworkManager
 import random
+import math
 
 # The MLP class as presented in this file is a bare bone object oriented approach to creating an MLP
 # for the purpose of capturing the behaviour of a static controller (table). 
@@ -138,7 +139,7 @@ class MLP:
                 tmp = 0
                 for j in range(4):
                     e_x.append(round(random.random()*10))
-                    tmp += e_x[j]*0.25
+                    tmp += e_x[j]*0.5
                 
                 tmp += 1
                 e_y.append(tmp)
@@ -173,19 +174,47 @@ class MLP:
             squared_delta = tf.square(model - y)
             loss = tf.reduce_sum(squared_delta)
             
-            optimizer = tf.train.GradientDescentOptimizer(0.0005)
-            train = optimizer.minimize(loss)
-
+            loss_threshold = 1e-6
+            
             # training
-            for i in range(1000):
-                #batch = self.linearFunctionBatch(1)
-                #sess.run(train, {x: batch[0], y: batch[1]})
-                sess.run(train, {x: [[1,2,3,4]], y: [[3.5]]})
-                if i%100 == 0:
-                    #print(sess.run(loss, {x: batch[0], y: [[3.5]]}))
-                    print(sess.run(loss, {x: [[1,2,3,4]], y: [[3.5]]}))
+            train = tf.train.GradientDescentOptimizer(0.00005).minimize(loss)
+           
+            i = 0
+            l = 0
+            old_l = l
+            
+            while True:
+                # get mini batch
+                mini_batch = self.linearFunctionBatch(50)
                 
-            print(sess.run([W, b]))
+                # do one gradient descent step using the random mini batch
+                sess.run(train, {x: mini_batch[0], y: mini_batch[1]})
+                
+                # determine the loss given the correct y value
+                l = sess.run(loss, {x: mini_batch[0], y: mini_batch[1]})
+                
+                if i % 1000 == 0 and i != 0:
+                    print("i = " + str(i) + " \t loss = " + str(l))
+                
+                if l < loss_threshold:
+                    print("Done training at i = " + str(i) + " with loss = " + str(l))
+                    break
+                
+                if old_l == l:
+                    print("Training no longer improves loss at i = " + str(i) + " with loss = " + str(l))
+                    break
+                
+                if math.isnan(l):
+                    print("Loss diverged at i = " + str(i))
+                    break
+                
+                i += 1
+                old_l = l
+                
+            eval_W = sess.run(W)
+            eval_b = sess.run(b)
+            print("W: " + str(eval_W))
+            print("b: " + str(eval_b))
             print(sess.run(model, {x : [[1,2,3,4]]}))
             
         # Training function

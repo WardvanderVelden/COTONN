@@ -135,10 +135,10 @@ class NeuralNetworkManager:
         
         # initialize nn in itself
         # self.nn.initializeNetwork()
+        
+        # test tensorflow
         # self.nn.tensorFlowTest(self)
         self.nn.tensorFlowWithLinearSystem()
-        
-        # set training method
         
         
     def train(self):
