@@ -16,13 +16,13 @@ class COTONN:
         
         self.debug_mode = True
         
-        self.importer.setDebugMode(False) # Disable debug mode for the importer to prevent intermediate import results
+        self.importer.setDebugMode(False)
         self.nnm.setDebugMode(self.debug_mode)
 
     # Test function to automatically convert a plain controller to a simple MLP network
     def test(self):
         # read static controller
-        filename = "controllers/dcdc/controller" # for smaller network use simple
+        filename = "controllers/dcdc/simple" # for smaller network use simple
         self.staticController = self.importer.readStaticController(filename)
         
         # initialize neural network

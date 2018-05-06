@@ -7,11 +7,14 @@ import math
 # for the purpose of capturing the behaviour of a static controller (table). 
 class MLP:   
         def __init__(self):
+            self.debug_mode = False
+            
             # General parameters
             self.learning_rate = 0.1
             self.batch_size = 100
             self.display_step = 1000
             self.loss_threshold = 0.1
+            self.fitness_threshold = 0.975
             
             # Network parameters
             self.layers = []
@@ -39,6 +42,8 @@ class MLP:
         def setBatchSize(self, value): self.batch_size = value
         def setDisplayStep(self, value): self.display_step = value
         def setLossThreshold(self, value): self.loss_threshold = value
+        def setFitnessThreshold(self, value): self.fitness_threshold = value
+        def setDebugMode(self, value): self.debug_mode = value
       
         def setNeurons(self, layers):
             self.num_layers = len(layers)
@@ -49,6 +54,7 @@ class MLP:
         def getBatchSize(self): return self.batch_size
         def getDisplayStep(self): return self.display_step
         def getLossThreshold(self): return self.loss_threshold
+        def getFitnessThreshold(self): return self.fitness_threshold
         def getNumLayers(self): return self.num_layers
         def getLayers(self): return self.layers
         
@@ -87,7 +93,12 @@ class MLP:
         
         # Intialize training function
         def initializeTrainFunction(self):
-            self.train_function = tf.train.GradientDescentOptimizer(self.learning_rate).minimize(self.loss_function)
+            #self.train_function = tf.train.GradientDescentOptimizer(self.learning_rate).minimize(self.loss_function)
+            self.train_function = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_function)
+            #self.train_function = tf.train.AdagradOptimizer(self.learning_rate).minimize(self.loss_function)
+            #self.train_function = tf.train.AdadeltaOptimizer(self.learning_rate).minimize(self.loss_function)
+            
+            self.session.run(tf.global_variables_initializer())
             
             return self.train_function
             
@@ -95,13 +106,13 @@ class MLP:
         def train(self, nnm):
             i = 0
             l = 0
-            old_l = l
+            fit = 0.0
             
-            print("Starting training")
+            print("\nTraining network:")
             
             while True:
                 # get mini batch
-                mini_batch = nnm.formatBatch(self.batch_size)
+                mini_batch = nnm.formatBinaryBatch(self.batch_size)
                 
                 # do one gradient descent step using the random mini batch
                 self.session.run(self.train_function, {self.x: mini_batch[0], self.y: mini_batch[1]})
@@ -110,17 +121,16 @@ class MLP:
                 l = self.session.run(self.loss_function, {self.x: mini_batch[0], self.y: mini_batch[1]})
                 
                 if i % self.display_step == 0 and i != 0:
-                    print("i = " + str(i) + "\tloss = " + str(l))
-                    #print("s: " + str(mini_batch[0][0]) + "\tu: " + str(mini_batch[1][0]))
-                    #print("\t\t\t\t\tu_: " + str(self.session.run(self.network, {self.x: [mini_batch[0][0]]})[0][0]))
-                    print("u: " + str(mini_batch[1][0]) + "\t\tu_: " + str(self.session.run(self.network, {self.x: [mini_batch[0][0]]})[0]))
+                    fit = nnm.checkFitness()
+                    print("i = " + str(i) + "\tloss = " + str(float("{0:.5f}".format(l))) + "\t\tfit = " + str(float("{0:.5f}".format(fit))))
+                    if(self.debug_mode):
+                        est = nnm.bed.etoba(self.session.run(self.network, {self.x: [mini_batch[0][0]]})[0])
+                        print("u:  " + str(mini_batch[1][0]))
+                        print("u_: " + str(est))
                 
-                if l < self.loss_threshold:
-                    print("Done training at i = " + str(i) + " with loss = " + str(l))
-                    break
-                
-                if old_l == l:
-                    print("Training no longer improves loss at i = " + str(i) + " with loss = " + str(l))
+                if l <= self.loss_threshold or fit >= self.fitness_threshold:
+                    print("Done training at:")
+                    print("i = " + str(i) + "\tloss = " + str(float("{0:.5f}".format(l))) + "\t\tfit = " + str(float("{0:.5f}".format(fit))))
                     break
                 
                 if math.isnan(l):
@@ -128,7 +138,6 @@ class MLP:
                     break
                 
                 i += 1
-                old_l = l
                 
         # Estimator function which estimates the desired outcome based on an input
         def estimate(self, x):
