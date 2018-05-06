@@ -22,14 +22,11 @@ class COTONN:
     # Test function to automatically convert a plain controller to a simple MLP network
     def test(self):
         # read static controller
-        filename = "controllers/dcdc/controller"
+        filename = "controllers/dcdc/controller" # for smaller network use simple
         self.staticController = self.importer.readStaticController(filename)
         
         # initialize neural network
-        self.nnm.initialize(NNTypes.MLP, NNOptimizer.Gradient_Descent, self.staticController)
-        
-        # train neural network
-        #self.nnm.train()
+        self.nnm.generateMLP(NNTypes.MLP, NNOptimizer.Gradient_Descent, self.staticController)
 
 cotonn = COTONN()
 cotonn.test()

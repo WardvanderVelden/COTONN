@@ -2,7 +2,7 @@
 # are called in tensorflow in order to generate neural networks from the controllers.
 
 import tensorflow as tf
-from MLP2 import MLP
+from MLP import MLP
 from BinaryEncoderDecoder import BinaryEncoderDecoder
 from enum import Enum
 import random
@@ -63,7 +63,7 @@ class NeuralNetworkManager:
         self.num_output_neurons = len(b_input)
         
     # Estimate the hidden layer neurons based on input and output neurons and amount of hidden layers
-    def estimateHiddenNeurons(self, num_hidden_layers):
+    def estimateNeurons(self, num_hidden_layers):
         layers = [0]*(num_hidden_layers+2)
         
         a = (self.num_output_neurons - self.num_input_neurons)/(num_hidden_layers + 1)
@@ -82,7 +82,7 @@ class NeuralNetworkManager:
     
     # Format a single state into a binary encoded pair
     def formatSingleState(self, id):     
-        pair = self.controller.getPairFromStateId(id)
+        pair = self.controller.getPairFromIndex(id)
         
         if(pair == None): return None
         
@@ -95,11 +95,8 @@ class NeuralNetworkManager:
     def formatBatch(self, size):
         pairs = []
         
-        lowest_state = self.controller.getLowestStateID()
-        highest_state = self.controller.getHighestStateID()
-        
         while len(pairs) < size:
-            s = round(random.random()*(highest_state - lowest_state) + lowest_state)
+            s = round(random.random()*self.controller.size())
             p = self.formatSingleState(s)
             if(p != None):
                 pairs.append(p)
@@ -119,8 +116,40 @@ class NeuralNetworkManager:
             y.append(e_y)
         
         return [x, y]
+    
+    # Function which goes through all the states in the controller and checks if the neural network estimates the input correctly
+    def checkFitness(self):
+        size = self.controller.size()
+        
+        x = []
+        y = []
+        for i in range(size):
+            p = self.formatSingleState(i)
+            e_x = []
+            e_y = []
+            for j in range(self.num_input_neurons):
+                e_x.append(int(p[0][j]))
+            for j in range(self.num_output_neurons):
+                e_y.append(int(p[1][j]))
+                
+            x.append(e_x)
+            y.append(e_y)
             
-    def initialize(self, type, training_method, controller):
+        estimation = self.nn.estimate(x)
+        fit = 0
+        
+        for i in range(size):
+            equal = True
+            for j in range(self.num_output_neurons):
+                if(round(estimation[i][j]) != float(y[i][j])):
+                    equal = False
+                    
+            if(equal):
+                fit += 1
+                
+        return float("{0:.5f}".format(fit/size))
+            
+    def generateMLP(self, type, training_method, controller):
         self.type = type
         self.training_method = training_method
         self.controller = controller
@@ -131,20 +160,34 @@ class NeuralNetworkManager:
             
         # initialize layers in nn    
         self.calculateIONeurons()
-        self.nn.setNeurons(self.estimateHiddenNeurons(3))   
+        self.nn.setNeurons(self.estimateNeurons(3))   
         
-        # initialize nn in itself
-        # self.nn.initializeNetwork()
+        print("Generated network neuron topology:")
+        print(self.nn.getLayers())
         
-        # test tensorflow
-        # self.nn.tensorFlowTest(self)
-        self.nn.tensorFlowWithLinearSystem()
+        # initialize nn itself
+        self.nn.initializeNetwork()
+        self.nn.initializeLossFunction()
         
+        self.nn.setLearningRate(0.15)
+        self.nn.setLossThreshold(1e-2)
+        self.nn.setBatchSize(100)
+        self.nn.setDisplayStep(1000)
         
-    def train(self):
-        if(self.nn != None):
-            self.nn.train()
+        self.nn.initializeTrainFunction()
         
+        # train nn
+        self.nn.train(self)
+        
+        # checking fitness
+        print("Checking fitness:")
+        print("Fitness: " + str(self.checkFitness()*100) + "%")
+        
+        # printing some weights because we can
+        #print(self.nn.session.run(self.nn.weights[0]))
+        
+        self.nn.close()
+    
             
 
         

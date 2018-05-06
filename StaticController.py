@@ -14,6 +14,9 @@ class StaticController:
         self.states = []
         self.inputs = []
         
+        self.state_size = 0
+        self.input_size = 0
+        
     # Getters
     def getStateSpaceDim(self): return self.state_space_dim
     def getStateSpaceEtas(self): return self.state_space_etas
@@ -27,14 +30,20 @@ class StaticController:
     
     # Get the input id and state id for a given state id
     def getPairFromStateId(self, id):
-        for i in range(self.size()):
+        for i in range(self.state_size):
             if(self.states[i] == id):
                 return [self.states[i], self.inputs[i]]
+        return None
+    
+    # Get the input id and state id for a given state index
+    def getPairFromIndex(self, id):
+        if(id >= 0 and id < self.state_size):
+            return [self.states[id], self.inputs[id]]
         return None
         
     # Get the input id corresponding to a given state id
     def getInputFromStateId(self, id):
-        for i in range(self.size()):
+        for i in range(self.state_size):
             if(self.states[i]  == id):
                 return self.inputs[i]
         print("ID does not correspond to a state in the winning domain.")
@@ -68,12 +77,18 @@ class StaticController:
         self.states.append(int(s))
         self.inputs.append(int(i))
         
+    def setSize(self):
+        self.state_size = len(self.states)
+        self.input_size = len(self.inputs)
+        
     # Get the size of the controller
+#    def size(self):
+#        if(len(self.states) == len(self.inputs)):
+#            return len(self.states)
+#        print("Controller states length and inputs length seem to be deviating.");
+#        return 0
     def size(self):
-        if(len(self.states) == len(self.inputs)):
-            return len(self.states)
-        print("Controller states length and inputs length seem to be deviating.");
-        return 0
+        return self.state_size
     
     
             

@@ -78,6 +78,9 @@ class Importer:
                   ctl.setStateInput(split_data[0], split_data[1])
                   if(i%1000 == 0 and self.debug_mode):
                       print("SS: " + split_data[0] + " IS: " + split_data[1])
+                      
+            # Calculate controller size
+            ctl.setSize()
                   
             return ctl
       
