@@ -14,7 +14,10 @@ class StaticController:
         self.states = []
         self.inputs = []
         
-    # Default getters and setters
+        self.state_size = 0
+        self.input_size = 0
+        
+    # Getters
     def getStateSpaceDim(self): return self.state_space_dim
     def getStateSpaceEtas(self): return self.state_space_etas
     def getStateSpaceBounds(self): return self.state_space_bounds
@@ -24,7 +27,45 @@ class StaticController:
     
     def getState(self, id): return self.states[id]
     def getInput(self, id): return self.inputs[id]
-
+    
+    # Get the input id and state id for a given state id
+    def getPairFromStateId(self, id):
+        for i in range(self.state_size):
+            if(self.states[i] == id):
+                return [self.states[i], self.inputs[i]]
+        return None
+    
+    # Get the input id and state id for a given state index
+    def getPairFromIndex(self, id):
+        if(id >= 0 and id < self.state_size):
+            return [self.states[id], self.inputs[id]]
+        return None
+        
+    # Get the input id corresponding to a given state id
+    def getInputFromStateId(self, id):
+        for i in range(self.state_size):
+            if(self.states[i]  == id):
+                return self.inputs[i]
+        print("ID does not correspond to a state in the winning domain.")
+        return None
+    
+    # Get lowest state id contained in the controller
+    def getLowestStateID(self):
+        return min(int(s) for s in self.states)
+    
+    # Get highest state id contained in the controller
+    def getHighestStateID(self):
+        return max(int(s) for s in self.states)
+    
+    # Get lowest input id contained in the controller
+    def getLowestInputID(self):
+        return min(int(i) for i in self.inputs)
+    
+    # Get highest input id contained in the controller
+    def getHighestInputID(self):
+        return max(int(i) for i in self.inputs)
+        
+    # Setters
     def setStateSpaceDim(self, value): self.state_space_dim = value
     def setStateSpaceEtas(self, value): self.state_space_etas = value
     def setStateSpaceBounds(self, value): self.state_space_bounds = value
@@ -36,38 +77,20 @@ class StaticController:
         self.states.append(int(s))
         self.inputs.append(int(i))
         
+    def setSize(self):
+        self.state_size = len(self.states)
+        self.input_size = len(self.inputs)
+        
     # Get the size of the controller
+#    def size(self):
+#        if(len(self.states) == len(self.inputs)):
+#            return len(self.states)
+#        print("Controller states length and inputs length seem to be deviating.");
+#        return 0
     def size(self):
-        if(len(self.states) == len(self.inputs)):
-            return len(self.states)
-        print("Controller states length and inputs length seem to be deviating.");
-        return 0
+        return self.state_size
     
-    # Functions to acces the information imbedded in the static controller
-    def getInputFromID(self, id):
-        for i in range(self.size()):
-            if(self.getState(i) == id):
-                return self.getInput(i)
-        print("ID does not correspond to a state in the winning domain.")
-        return None
     
-    # Get highest state id contained in the controller
-    def getHighestStateID(self):
-        highest = 0
-        for i in range(self.size()):
-            state = self.getState(i)
-            if(state > highest):
-                highest = state
-        return highest
-    
-    # Get highest input id contained in the controller
-    def getHighestInputID(self):
-        highest = 0
-        for i in range(self.size()):
-            input = self.getInput(i)
-            if(input > highest):
-                highest = input
-        return highest
             
 
     

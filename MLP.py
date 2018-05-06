@@ -1,157 +1,242 @@
 import tensorflow as tf
-from NeuralNetworkManager import NNActivationFunction, NNOptimizer
-from tensorflow.contrib.learn.python.learn.estimators import model_fn as model_fn_lib
+import NeuralNetworkManager
+import random
+import math
 
+# The MLP class as presented in this file is a bare bone object oriented approach to creating an MLP
+# for the purpose of capturing the behaviour of a static controller (table). 
 class MLP:   
-      tf.logging.set_verbosity(tf.logging.INFO)
-      def __init__(self):
+        def __init__(self):
+            self.debug_mode = False
+            
+            # General parameters
             self.learning_rate = 0.1
-            self.num_steps = 50
-            self.batch_size = 256
-            self.display_step = 200
-            self.n_layer = [256, 256]
-            self.num_input = 784
-            self.num_classes = 10
-            self.activation_type = None
+            self.batch_size = 100
+            self.display_step = 1000
+            self.loss_threshold = 0.1
+            self.fitness_threshold = 0.975
+            
+            # Network parameters
+            self.layers = []
+            self.num_layers = 0
+            
+            # Neural network general variables (MLP)
+            self.s = None 
+            self.u = None
+            
+            self.weights = []
+            self.biases = []
+            
+            self.network = None 
+            
+            # Neural network training variables
+            self.squared_delta = None
             self.loss_function = None
-            self.optimizer_type = None
-     
-      def setLearningRate(self, value): self.learning_rate = value
-      def setNumSteps(self, value): self.num_steps = value
-      def setBatchSize(self, value): self.batch_size = value
-      def setDisplayStep(self, value): self.display_step = value
-      def setNeuronsLayer(self, value): self.n_layer = value
-      def setNumInput(self, value): self.num_input = value
-      def setNumClasses(self, value): self.num_classes = value
-      def setActivationType(self, value): self.activation_type = value
-      def setLossFunction(self, value): self.loss_function = value
-      def setOptimizer(self, value): self.optimizer_type = value
+            self.train_function = None
+            
+            # Tensorflow specific
+            self.session = tf.Session()
+            
+        # Setters
+        def setLearningRate(self, value): self.learning_rate = value
+        def setBatchSize(self, value): self.batch_size = value
+        def setDisplayStep(self, value): self.display_step = value
+        def setLossThreshold(self, value): self.loss_threshold = value
+        def setFitnessThreshold(self, value): self.fitness_threshold = value
+        def setDebugMode(self, value): self.debug_mode = value
       
-      def getLearningRate(self): return self.learning_rate
-      def getNumSteps(self): return self.num_steps
-      def getBatchSize(self): return self.batch_size
-      def getDisplayStep(self): return self.display_step
-      def getNeuronsLayer(self): return self.n_layer 
-      def getNumInput(self): return self.num_input
-      def getNumClasses(self): return self.num_classes
-      def getActivationType(self): return self.activation_type 
-      def getLossFunction(self): return self.loss_function
-      def getOptimizer(self): return self.optimizer_type
-
-
-      def getTrainingInputs(self, training_data):
-            training_states = tf.constant(training_data.states)
-            training_labels = tf.constant(training_data.labels)
-            return training_states, training_labels
+        def setNeurons(self, layers):
+            self.num_layers = len(layers)
+            self.layers = layers
       
-      def getTestInputs(self, test_data):
-            test_states = tf.constant(test_data.states)
-            test_labels = tf.constant(test_data.labels)
-            return test_states, test_labels
-
-      def initializeNeuralNet(self):  #input_features_dict  
-            in_layer = tf.layers.dense(self.num_input, self.n_layer[0])
-            in_layer = self.activationFunction(in_layer)
+        # Getters
+        def getLearningRate(self): return self.learning_rate
+        def getBatchSize(self): return self.batch_size
+        def getDisplayStep(self): return self.display_step
+        def getLossThreshold(self): return self.loss_threshold
+        def getFitnessThreshold(self): return self.fitness_threshold
+        def getNumLayers(self): return self.num_layers
+        def getLayers(self): return self.layers
+        
+        # Initialize network function which intializes an initial network with random weights and biases
+        def initializeNetwork(self):
+            # Initialize tensors
+            self.x = tf.placeholder(tf.float32, [None, self.layers[0]])
+            self.y = tf.placeholder(tf.float32, [None, self.layers[-1]])
             
-            hidden_layers = []
-            hidden_layers.append(tf.layers.dense(in_layer, self.n_layer[0]))
-            for i in range(0, len(self.n_layer)-1):
-                  hidden_layers.append(tf.layers.dense(hidden_layers[i-1], self.n_layer[i]))  
-            hidden_layers = self.activationFunction(hidden_layers)
+            self.weights = [None]*(self.num_layers - 1)
+            self.biases = [None]*(self.num_layers - 1)
             
-            out_layer = tf.layers.dense(hidden_layers[-1], self.num_classes)
-            out_layer = self.activationFunction(out_layer)
-            return out_layer
-                      
-      def generateModelFunction(self, features, targets, mode, params):
-            # Logic to do the following:
-            # 1. Configure the model via TensorFlow operations
-            # 2. Define the loss function for training/evaluation
-            # 3. Define the training operation/optimizer
-            # 4. Generate predictions
-            # 5. Return predictions/loss/train_op/eval_metric_ops in ModelFnOps object
+            for i in range(self.num_layers - 1):
+                self.weights[i] = tf.Variable(tf.random_normal([self.layers[i], self.layers[i+1]]),tf.float32)
+                self.biases[i]= tf.Variable(tf.random_normal([self.layers[i+1]]),tf.float32)
+                
+
+            # Define network
+            tf_layers = [None]*(self.num_layers - 1)   
+            tf_layers[0] = tf.sigmoid(tf.add(tf.matmul(self.x, self.weights[0]), self.biases[0])) # input layer
+            for i in range(1, self.num_layers - 1):
+                tf_layers[i] = tf.sigmoid(tf.add(tf.matmul(tf_layers[i-1], self.weights[i]), self.biases[i]))
+                
+            self.network = tf_layers[-1]
             
-            NeuralNet = self.NeuralNet()
+            self.session.run(tf.global_variables_initializer())
             
-            # Reshape output layer to 1-dim Tensor to return predictions
-            predictions = tf.reshape(NeuralNet, [-1])
+            return self.network
+        
+        # Initialize loss function
+        def initializeLossFunction(self):
+            self.squared_delta = tf.square(self.network - self.y)
+            self.loss_function = tf.reduce_sum(self.squared_delta)
             
-            # Calculate loss using mean squared error
-            loss = self.lossFunction(targets, predictions)
+            return self.loss_function
+        
+        # Intialize training function
+        def initializeTrainFunction(self):
+            #self.train_function = tf.train.GradientDescentOptimizer(self.learning_rate).minimize(self.loss_function)
+            self.train_function = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_function)
+            #self.train_function = tf.train.AdagradOptimizer(self.learning_rate).minimize(self.loss_function)
+            #self.train_function = tf.train.AdadeltaOptimizer(self.learning_rate).minimize(self.loss_function)
             
-            # Calculate root mean squared error as additional eval metric
-            eval_metric_ops = {"rmse": tf.metrics.root_mean_squared_error(
-                              tf.cast(targets, tf.float64), predictions)}
+            self.session.run(tf.global_variables_initializer())
             
-            train_op = tf.contrib.layers.optimize_loss(
-                        loss = loss,
-                        global_step = tf.contrib.framework.get_global_step(),
-                        learning_rate = self.learning_rate,
-                        optimizer = self.optimizerFunction)
-            return model_fn_lib.ModelFnOps(mode, predictions, loss, train_op, eval_metric_ops)
-      
-      def activationFunction(self, layer):
-            if self.activation_type == None:
-                  self.activationFunction = tf.nn.linear(layer)
-            if self.activation_type == NNActivationFunction.Relu:
-                  self.activationFunction = tf.nn.relu(layer)
-            if self.activation_type == NNActivationFunction.Sigmoid:
-                  self.activationFunction = tf.nn.relu(layer)
-            return self.activationFunction
-      
-      def lossFunction(self, targets, predictions):
-            if self.Loss_function == None:
-                  self.setLossFunction = tf.losses.mean_squared_error(targets, predictions)
-            return self.lossFunction
-
-      def optimizerFunction(self, layer):
-            if self.optimizer_type == None:
-                  self.optimizerFunction = "SGD"
-            if self.optimizer_type == NNOptimizer.Gradient_Descent:
-                  self.optimizerFunction = "SGD"
-            if self.optimizer_type == NNOptimizer.Adagrad:
-                  self.optimizerFunction = "Adagrad"
-            if self.optimizer_type == NNOptimizer.Adadelta:
-                  self.optimizerFunction = "Adadelta"
-            if self.optimizer_type == NNOptimizer.Adam:
-                  self.optimizerFunction = "Adam"
-            if self.optimizer_type == NNOptimizer.Ftrl:
-                  self.optimizerFunction = "Ftrl"
-            if self.optimizer_type == NNOptimizer.Momentum:
-                  self.optimizerFunction = "Momentum"
-            if self.optimizer_type == NNOptimizer.RMSProp:
-                  self.optimizerFunction = "RMSProp"
-            return self.optimizerFunction  
-
-      def train(self, data):
-            nn = tf.contrib.learn.Estimator(model_fn=self.generateModelFunction, params = self.learning_rate)
-            nn.fit(input_fn=self.get_train_inputs, steps=self.num_steps)
+            return self.train_function
             
-            ev = nn.evaluate(input_fn=self.getTestInputs, steps=1)
-            print("Loss: %s" % ev["loss"])
-            print("Root Mean Squared Error: %s" % ev["rmse"])
-            return 
- 
-      def test(self, neural_network):
-            # Prediction set is the data we want to predict, so some examples
-            test_nn = neural_network
-            test_estimation = test_nn.predict(x=self.test_states, as_iterable=True)
-            for i, p in enumerate(test_estimation):
-                  print("Prediction %s: %s" % (i + 1, p[""]))
-      
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        # Training function
+        def train(self, nnm):
+            i = 0
+            l = 0
+            fit = 0.0
+            
+            print("\nTraining network:")
+            
+            while True:
+                # get mini batch
+                mini_batch = nnm.formatBinaryBatch(self.batch_size)
+                
+                # do one gradient descent step using the random mini batch
+                self.session.run(self.train_function, {self.x: mini_batch[0], self.y: mini_batch[1]})
+                
+                # determine the loss given the correct y value
+                l = self.session.run(self.loss_function, {self.x: mini_batch[0], self.y: mini_batch[1]})
+                
+                if i % self.display_step == 0 and i != 0:
+                    fit = nnm.checkFitness()
+                    print("i = " + str(i) + "\tloss = " + str(float("{0:.5f}".format(l))) + "\t\tfit = " + str(float("{0:.5f}".format(fit))))
+                    if(self.debug_mode):
+                        est = nnm.bed.etoba(self.session.run(self.network, {self.x: [mini_batch[0][0]]})[0])
+                        print("u:  " + str(mini_batch[1][0]))
+                        print("u_: " + str(est))
+                
+                if l <= self.loss_threshold or fit >= self.fitness_threshold:
+                    print("Done training at:")
+                    print("i = " + str(i) + "\tloss = " + str(float("{0:.5f}".format(l))) + "\t\tfit = " + str(float("{0:.5f}".format(fit))))
+                    break
+                
+                if math.isnan(l):
+                    print("Loss diverged at i = " + str(i))
+                    break
+                
+                i += 1
+                
+        # Estimator function which estimates the desired outcome based on an input
+        def estimate(self, x):
+            return self.session.run(self.network, {self.x: x})
+            
+            
+        # Get a batch for our linear function test setup
+        def linearFunctionBatch(self, size):
+            x = []
+            y = []
+            for i in range(size):
+                e_x = []
+                e_y = []
+                tmp = 0
+                for j in range(4):
+                    e_x.append(round(random.random()*10))
+                    tmp += e_x[j]*(j+1)/6
+                
+                tmp += 2.5
+                e_y.append(tmp)
+                x.append(e_x)
+                y.append(e_y)
+            return [x, y]
+            
+        # In order to test all the tensor flow functionality and get
+        # my head around the framework this will be a demonstration
+        # of a simple linear system that has to average some input and 
+        # add a bias with 4 random inputs thus: Y = 1/4*X + 1 = W*X + B
+        # we will setup tensorflow such that it will find the values of W and B
+        # by comparing its output to a function which already contains this function
+        # it will thus try to learn that functions functionality
+        def tensorFlowWithLinearSystem(self):
+            # session
+            sess = tf.Session()
+            
+            # tensor placeholders which will be loaded by training batches
+            x = tf.placeholder(tf.float32, shape=[None, 4])
+            y = tf.placeholder(tf.float32, shape=[None, 1])
+            
+            # weight and bias tensors 
+            # network has 4 inputs and only 2 layers (input, output) with 1 neuron
+            W = tf.Variable(tf.random_normal([4, 1]), tf.float32)
+            b = tf.Variable(tf.random_normal([1]), tf.float32)
+            
+            model = tf.add(tf.matmul(x,W), b)
+            
+            sess.run(tf.global_variables_initializer())
+            
+            squared_delta = tf.square(model - y)
+            loss = tf.reduce_sum(squared_delta)
+            
+            loss_threshold = 1e-8
+            
+            # training
+            train = tf.train.GradientDescentOptimizer(0.000075).minimize(loss)
+            
+            i = 0
+            l = 0
+            old_l = l
+            
+            while True:
+                # get mini batch
+                mini_batch = self.linearFunctionBatch(100)
+                
+                # do one gradient descent step using the random mini batch
+                sess.run(train, {x: mini_batch[0], y: mini_batch[1]})
+                
+                # determine the loss given the correct y value
+                l = sess.run(loss, {x: mini_batch[0], y: mini_batch[1]})
+                
+                if i % self.display_step == 0 and i != 0:
+                    print("i = " + str(i) + " \t loss = " + str(l))
+                
+                if l < loss_threshold:
+                    print("Done training at i = " + str(i) + " with loss = " + str(l))
+                    break
+                
+                if old_l == l:
+                    print("Training no longer improves loss at i = " + str(i) + " with loss = " + str(l))
+                    break
+                
+                if math.isnan(l):
+                    print("Loss diverged at i = " + str(i))
+                    break
+                
+                i += 1
+                old_l = l
+                
+            eval_W = sess.run(W)
+            eval_b = sess.run(b)
+            print("W: " + str(eval_W))
+            print("b: " + str(eval_b))
+            print(sess.run(model, {x : [[1,2,3,4]]}))
+            
+            sess.close()
+            
+        # Close function which closes tensorflow session
+        def close(self):
+            self.session.close()
+            
+            
+            

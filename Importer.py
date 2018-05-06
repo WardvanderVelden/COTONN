@@ -69,15 +69,22 @@ class Importer:
                 print("These are the bounds of the INPUT_SPACE:\n", ctl.getInputSpaceBounds())
             
             # Now we extract the matrix data from the text file
-            matrix_data = self.raw_str[self.raw_str.index("#MATRIX:DATA"):]
-            matrix_data = matrix_data.split(' \n')                                               
+            matrix_data_left = self.raw_str.index("#MATRIX:DATA")
+            matrix_str = self.raw_str[matrix_data_left:]
+            matrix_str = matrix_str[:matrix_str.index("\n#END")]                                     
+                                                  
+            matrix_data = matrix_str.split('\n')                                               
             matrix_data = matrix_data[2:]
-            for i in range(len(matrix_data)-1):
-                  single_string = matrix_data[i]
-                  split_data = single_string.split()
-                  ctl.setStateInput(split_data[0], split_data[1])
-                  if(i%1000 == 0 and self.debug_mode):
-                      print("SS: " + split_data[0] + " IS: " + split_data[1])
+            for i in range(len(matrix_data)):
+                split_data = matrix_data[i].split(' ')
+                s = int(split_data[0].replace(' ',''))
+                u = int(split_data[1].replace(' ',''))
+                ctl.setStateInput(s, u)
+                if(i%1000 == 0 and self.debug_mode):
+                    print("SS: " + str(s) + " IS: " + str(u))
+                      
+            # Calculate controller size
+            ctl.setSize()
                   
             return ctl
       
