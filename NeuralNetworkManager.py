@@ -165,11 +165,11 @@ class NeuralNetworkManager:
         self.nn.initializeLossFunction()
         
         #self.nn.setLearningRate(0.005)
-        self.nn.setLearningRate(0.005)
+        self.nn.setLearningRate(0.05)
         self.nn.setLossThreshold(1e-8)
         self.nn.setFitnessThreshold(0.99)
         self.nn.setBatchSize(200)
-        self.nn.setDisplayStep(100)
+        self.nn.setDisplayStep(1000)
         
         self.nn.initializeTrainFunction()
         
