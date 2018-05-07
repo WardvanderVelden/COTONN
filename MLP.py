@@ -154,7 +154,7 @@ class MLP:
                 tmp = 0
                 for j in range(4):
                     e_x.append(round(random.random()*10))
-                    tmp += e_x[j]*(j+1)/6
+                    tmp += e_x[j]*0.25
                 
                 tmp += 2.5
                 e_y.append(tmp)

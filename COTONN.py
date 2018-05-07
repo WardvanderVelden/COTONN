@@ -11,7 +11,6 @@ class COTONN:
     def __init__(self):
         self.importer = Importer()
         self.nnm = NeuralNetworkManager()
-        self.bed = BinaryEncoderDecoder()
         self.staticController = StaticController()
         
         self.debug_mode = True
