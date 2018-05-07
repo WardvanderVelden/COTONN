@@ -64,6 +64,10 @@ class StaticController:
     # Get highest input id contained in the controller
     def getHighestInputID(self):
         return max(int(i) for i in self.inputs)
+    
+    # Get the size of the controller
+    def getSize(self):
+        return self.state_size
         
     # Setters
     def setStateSpaceDim(self, value): self.state_space_dim = value
@@ -81,14 +85,7 @@ class StaticController:
         self.state_size = len(self.states)
         self.input_size = len(self.inputs)
         
-    # Get the size of the controller
-#    def size(self):
-#        if(len(self.states) == len(self.inputs)):
-#            return len(self.states)
-#        print("Controller states length and inputs length seem to be deviating.");
-#        return 0
-    def size(self):
-        return self.state_size
+    
     
     
             
