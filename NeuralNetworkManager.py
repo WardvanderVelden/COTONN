@@ -150,7 +150,7 @@ class NeuralNetworkManager:
     
     # Initialize neural network
     def initializeNeuralNetwork(self, keep_prob):
-        print("Neural network initialization:")
+        print("\nNeural network initialization:")
         if(self.type == NNTypes.MLP):
             self.nn = MLP()
             self.nn.setDebugMode(False)
