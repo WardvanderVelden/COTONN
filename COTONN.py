@@ -26,10 +26,10 @@ class COTONN:
 
     # Test function to automatically convert a plain controller to a simple MLP network
     def run(self):      
-        print("COTONN v0.2.1")
+        print("COTONN v0.2.3")
         
         # read static controller
-        filename = "controllers/dcdc/controller" # for smaller network use simple
+        filename = "controllers/test/controller" # for smaller network use simple
         self.staticController = self.importer.readStaticController(filename)
         
         # define dataset
@@ -41,11 +41,11 @@ class COTONN:
         self.nnm.setTrainingMethod(NNOptimizer.Adam)
         self.nnm.setActivationFunction(NNActivationFunction.Sigmoid)
         self.nnm.setDataSet(self.dataSet)
-        self.nnm.rectangularHiddenLayers(3, 10)
-        self.nnm.initializeNeuralNetwork(0.90)
+        self.nnm.rectangularHiddenLayers(4, 16)
+        self.nnm.initializeNeuralNetwork(0.99)
         
         # training
-        self.nnm.initializeTraining(0.001, 0.99, 200, 1000)
+        self.nnm.initializeTraining(0.05, 0.90, 250, 1000, 500)
         self.nnm.train()
         
         # validate by randomly picking inputs
@@ -59,7 +59,18 @@ class COTONN:
         
         # close session
         self.nnm.close()
+        
+    def testShuffle(self):
+        filename = "controllers/dcdc/simple" # for smaller network use simple
+        self.staticController = self.importer.readStaticController(filename)
+        
+        self.dataSet.readSetFromController(self.staticController)
+        #self.dataSet.formatToBinary()
+        print(self.dataSet.getBatch(self.dataSet.getSize(),0))
+        self.dataSet.shuffle()
+        print(self.dataSet.getBatch(self.dataSet.getSize(),0))
 
 cotonn = COTONN()
+#cotonn.testShuffle()
 cotonn.run()
 
