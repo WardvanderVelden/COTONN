@@ -10,14 +10,17 @@ class BinaryEncoderDecoder:
             binary = binary[a:]
         return binary
     
+    
     # Converts a binary number (represented as a string) to a ordinay redix-10 number
     def bton(self, binary):
         return int(binary, 2)
+    
     
     # Converts a number to a binary number in the smaller amount of digets required
     def sntob(self, number):
         b = bin(number)
         return b[2:]
+    
     
     # Converts a number into a binary array
     def ntoba(self, number, length):
@@ -33,12 +36,14 @@ class BinaryEncoderDecoder:
             
         return a
     
+    
     # Converts a binary array into a number
     def baton(self, array):
         binary = ""
         for i in range(len(array)):
             binary += str(array[i])
         return int(binary, 2)
+    
     
     # Converts a float array binary estimation to binary array
     def etoba(self, x):
@@ -47,6 +52,7 @@ class BinaryEncoderDecoder:
             tmp = round(x[i])
             a.append(int(tmp))
         return a
+    
     
     # Converts an estimation to number
     def eton(self, x):
