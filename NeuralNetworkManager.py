@@ -2,7 +2,11 @@
 from BinaryEncoderDecoder import BinaryEncoderDecoder
 from MLP import MLP
 from enum import Enum
+
 import math
+import numpy
+import signal
+import time
 
 class NNTypes(Enum):
       MLP = 1
@@ -31,13 +35,13 @@ class NeuralNetworkManager:
         self.training_method = None
         self.activation_function = None
         
+        self.training = True
         self.learning_rate = 0.1
         self.fitness_threshold = 0.75
         self.batch_size = 100
         self.display_step = 1000
         
         self.epoch = 0
-        self.epoch_threshold = 10000
         
         self.layers = []
         
@@ -103,7 +107,7 @@ class NeuralNetworkManager:
         
         
     # Check a state against the dataset and nn by using its id in the dataset
-    def checkByIndex(self, index):
+    def checkByIndex(self, index, out):
         x = self.data_set.x[index]
         estimation = self.nn.estimate([x])[0]
         y = self.data_set.getY(index)
@@ -114,24 +118,13 @@ class NeuralNetworkManager:
             if(not((y[i] - y_eta[i]) <= estimation[i] and (y[i] + y_eta[i]) > estimation[i])):
                 equal = False
         
-        if(self.debug_mode):
-            print("u: " + str(y) + "u_: " + str(estimation) + " within etas: " + str(equal))
+        if(out):
+            print("u: " + str(y) + " u_: " + str(numpy.round(estimation,2)) + " within etas: " + str(equal))
             
         return equal
-        
-        
-    # Check a state against the dataset and nn by using its id in the dataset
-    def checkByState(self, state):
-        index = 0
-        for i in range(self.data_set.getSize()):
-            if(self.data_set.getX(i) == state):
-                index = i
-                break
-              
-        return self.checkByIndex(index)
-        
     
-    # Function which goes through all the states in the controller and checks if the neural network estimates the input correctly
+    
+    # Calculate fitness based on the dataset
     def checkFitness(self):
         size = self.data_set.getSize()
             
@@ -139,8 +132,17 @@ class NeuralNetworkManager:
         fit = 0
         wrong = []
         
+        y_eta = self.data_set.getYEta()
+        y_dim = self.data_set.getYDim()
+        
         for i in range(size):
-            if(self.bed.etoba(estimation[i]) == self.data_set.y[i]):
+            y = self.data_set.getY(i)
+            equal = True
+            for j in range(y_dim):
+                if(not((y[j] - y_eta[j]) <= estimation[i][j] and (y[j] + y_eta[j]) > estimation[i][j])):
+                    equal = False
+                
+            if(equal):
                 fit += 1
             else:
                 wrong.append(i)
@@ -149,17 +151,20 @@ class NeuralNetworkManager:
     
     
     # Initialize neural network
-    def initializeNeuralNetwork(self):
+    def initializeNeuralNetwork(self, keep_prob):
+        print("Neural network initialization:")
         if(self.type == NNTypes.MLP):
             self.nn = MLP()
             self.nn.setDebugMode(False)
-            print("\nNeural network type: MLP")
+            print("Neural network type: MLP")
             
         # Initialize network and loss function
         self.nn.setNeurons(self.layers)
-        self.nn.initializeNetwork()
+        self.nn.setKeepProbability(keep_prob)
+        self.nn.initializeNetwork(self.activation_function)
         
         print("Generated network neuron topology: " + str(self.layers))
+        print("Neuron keep probability: " + str(self.nn.getKeepProbability()))
         
         
     # Initialize training function
@@ -179,11 +184,13 @@ class NeuralNetworkManager:
         
     # Train network
     def train(self):
-        print("\nTraining:")
+        print("\nTraining (Ctrl+C to interrupt):")
+        signal.signal(signal.SIGINT, self.interrupt)
 
         i, batch_index, loss, old_loss, fit = 0,0,0,0,0.0
         
-        while True:
+        start_time = time.time()
+        while self.training:
             batch = self.data_set.getBatch(self.batch_size, batch_index)
             loss = self.nn.trainStep(batch)
             
@@ -211,7 +218,24 @@ class NeuralNetworkManager:
                 self.epoch += 1
             i += 1
             old_loss = loss
+        
+        end_time = time.time()
+        print("Time taken: " + self.formatTime(end_time - start_time))
+        
+        
+    # Format
+    def formatTime(self, time):
+        h = math.floor(time / 3600)
+        m = math.floor(time / 60) % 60
+        s = time - h*3600 - m*60
+        
+        return str(h)+" hrs "+str(m)+" mins "+str(float("{0:.2f}".format(s)))+" secs"
             
+        
+    # Interrupt handler to interrupt the training while in progress
+    def interrupt(self, signal, frame):
+        self.training = False
+        
         
     # Save network
     def save(self):
