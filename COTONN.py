@@ -1,4 +1,5 @@
 from Importer import Importer
+from Exporter import Exporter
 from NeuralNetworkManager import NeuralNetworkManager
 from StaticController import StaticController
 from DataSet import DataSet
@@ -12,6 +13,7 @@ from NeuralNetworkManager import NNOptimizer
 class COTONN:
     def __init__(self):
         self.importer = Importer()
+        self.exporter = Exporter()
         self.nnm = NeuralNetworkManager()
         self.staticController = StaticController()
         self.dataSet = DataSet()
@@ -51,7 +53,7 @@ class COTONN:
             self.nnm.checkByIndex(r, True)
         
         # save nn
-        self.nnm.save()
+        #self.exporter.saveNetwork(self.nnm, "/log/model.ckpt")
         
         # close session
         self.nnm.close()
