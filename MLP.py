@@ -24,9 +24,11 @@ class MLP:
             self.squared_delta = None
             self.loss_function = None
             self.train_function = None
+            self.keep_prob = 1
             
             # Tensorflow specific
             self.session = tf.Session()
+            #self.saver = tf.train.Saver()
             
         # Setters
         def setDebugMode(self, value): self.debug_mode = value
@@ -40,7 +42,7 @@ class MLP:
         
         
         # Initialize network function which intializes an initial network with random weights and biases
-        def initializeNetwork(self, activation):
+        def initializeNetwork(self):
             # Initialize tensors
             self.x = tf.placeholder(tf.float32, [None, self.layers[0]])
             self.y = tf.placeholder(tf.float32, [None, self.layers[-1]])
@@ -54,17 +56,31 @@ class MLP:
 
             # Define network
             tf_layers = [None]*(self.num_layers - 1)   
-            tf_layers[0] = tf.sigmoid(tf.add(tf.matmul(self.x, self.weights[0]), self.biases[0])) # input layer
+            tf_layers[0] = tf.add(tf.matmul(self.x, self.weights[0]), self.biases[0]) # input layer
+            tf_layers[0] = self.activationFunction(tf_layers[0])
+            tf_layers[0] = tf.nn.dropout(tf_layers[0], self.keep_prob, noise_shape=None, seed=None, name=None)
+            
             for i in range(1, self.num_layers - 1):
-                tf_layers[i] = tf.sigmoid(tf.add(tf.matmul(tf_layers[i-1], self.weights[i]), self.biases[i]))
-                
+                tf_layers[i] = tf.add(tf.matmul(tf_layers[i-1], self.weights[i]), self.biases[i])
+                tf_layers[i] = self.activationFunction(tf_layers[i])
+                tf_layers[i] = tf.nn.dropout(tf_layers[i], self.keep_prob, noise_shape=None, seed=None, name=None)
+      
             self.network = tf_layers[-1]
             
             self.session.run(tf.global_variables_initializer())
             
             return self.network
         
-        
+        def activationFunction(self, layer):
+              if NeuralNetworkManager.NNActivationFunction == 1:
+                    layer = tf.sigmoid(layer)
+              if NeuralNetworkManager.NNActivationFunction == 2:
+                    layer = tf.relu(layer)
+              if NeuralNetworkManager.NNActivationFunction == 3:
+                    layer = tf.tanh(layer)
+              else: layer = tf.sigmoid(layer)
+              return layer
+ 
         # Initialize loss function
         def initializeLossFunction(self):
             self.squared_delta = tf.square(self.network - self.y)
@@ -92,7 +108,7 @@ class MLP:
                 print("Training method: Gradient Descent")
      
             self.session.run(tf.global_variables_initializer())
-            
+            #Exporter.saveNetwork(self.session, "/log/log.ckpt")
             return self.train_function
         
         

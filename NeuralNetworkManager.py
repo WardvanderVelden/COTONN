@@ -21,7 +21,7 @@ class NNOptimizer(Enum):
 class NNActivationFunction(Enum):
       Sigmoid = 1
       Relu = 2
-      Linear = 3
+      tanh = 3
 
 # Class which will handle all the work done on neural networks and will contain all the functions which
 # are called in tensorflow in order to generate neural networks from the controllers.
@@ -57,6 +57,7 @@ class NeuralNetworkManager:
     def getDisplayStep(self): return self.display_step
     def getEpoch(self): return self.epoch
     def getEpochThreshold(self): return self.epoch_threshold
+    def getKeepProbability(self): return self.keep_prob
     
     def setType(self, type): self.type = type
     def setTrainingMethod(self, optimizer): self.training_method = optimizer
@@ -65,7 +66,8 @@ class NeuralNetworkManager:
     def setFitnessThreshold(self, value): self.fitness_threshold = value
     def setBatchSize(self, value): self.batch_size = value
     def setDisplayStep(self, value): self.display_step = value
-    def setEpochThreshold(self, value): self.epoch_threshold = value
+    def setEpochThreshold(self, keep_probability): self.epoch_threshold = keep_probability
+    def setKeepProbability(self, value): self.drop_out = value
 
     def setDataSet(self, data_set): self.data_set = data_set
     
@@ -155,7 +157,7 @@ class NeuralNetworkManager:
             
         # Initialize network and loss function
         self.nn.setNeurons(self.layers)
-        self.nn.initializeNetwork(self.activation_function)
+        self.nn.initializeNetwork()
         
         print("Generated network neuron topology: " + str(self.layers))
         
@@ -213,6 +215,7 @@ class NeuralNetworkManager:
         
     # Save network
     def save(self):
+          
         print("\nSaving neural network")
     
     

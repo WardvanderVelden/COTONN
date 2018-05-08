@@ -11,11 +11,11 @@ class Exporter:
             save_path = saver.save(session, "COTONN_model_variables")
             print("Variables saved in path: %s" % save_path)
       
-      def saveNetwork(self, session):
+      def saveNetwork(self, nnm, model_path):
             # Create a saver
-            saver = tf.train.Saver()
+            
             # Save the given session      
-            save_path = saver.save(session, "COTONN_model")
+            save_path = nnm.nn.saver.save(nnm.nn.session, model_path)
             print("Model saved in path: %s" % save_path)
 
 
