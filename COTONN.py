@@ -8,6 +8,7 @@ import random
 
 from NeuralNetworkManager import NNTypes
 from NeuralNetworkManager import NNOptimizer
+from NeuralNetworkManager import NNActivationFunction
 
 # Main class from which all functions are called
 class COTONN:
@@ -38,12 +39,13 @@ class COTONN:
         # specify neural network
         self.nnm.setType(NNTypes.MLP)
         self.nnm.setTrainingMethod(NNOptimizer.Adam)
+        self.nnm.setActivationFunction(NNActivationFunction.Sigmoid)
         self.nnm.setDataSet(self.dataSet)
         self.nnm.rectangularHiddenLayers(3, 10)
-        self.nnm.initializeNeuralNetwork(0.95)
+        self.nnm.initializeNeuralNetwork(0.90)
         
         # training
-        self.nnm.initializeTraining(0.005, 0.95, 200, 1000)
+        self.nnm.initializeTraining(0.001, 0.99, 200, 1000)
         self.nnm.train()
         
         # validate by randomly picking inputs

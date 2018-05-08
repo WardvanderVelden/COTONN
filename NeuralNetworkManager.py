@@ -152,7 +152,7 @@ class NeuralNetworkManager:
     
     # Initialize neural network
     def initializeNeuralNetwork(self, keep_prob):
-        print("Neural network initialization:")
+        print("\nNeural network initialization:")
         if(self.type == NNTypes.MLP):
             self.nn = MLP()
             self.nn.setDebugMode(False)
@@ -161,7 +161,7 @@ class NeuralNetworkManager:
         # Initialize network and loss function
         self.nn.setNeurons(self.layers)
         self.nn.setKeepProbability(keep_prob)
-        self.nn.initializeNetwork(self.activation_function)
+        self.nn.initializeNetwork()
         
         print("Generated network neuron topology: " + str(self.layers))
         print("Neuron keep probability: " + str(self.nn.getKeepProbability()))
