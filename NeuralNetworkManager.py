@@ -161,7 +161,7 @@ class NeuralNetworkManager:
         # Initialize network and loss function
         self.nn.setNeurons(self.layers)
         self.nn.setKeepProbability(keep_prob)
-        self.nn.initializeNetwork(self.activation_function)
+        self.nn.initializeNetwork()
         
         print("Generated network neuron topology: " + str(self.layers))
         print("Neuron keep probability: " + str(self.nn.getKeepProbability()))
