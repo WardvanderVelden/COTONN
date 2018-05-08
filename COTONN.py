@@ -1,8 +1,9 @@
 from Importer import Importer
 from NeuralNetworkManager import NeuralNetworkManager
-from BinaryEncoderDecoder import BinaryEncoderDecoder
 from StaticController import StaticController
 from DataSet import DataSet
+
+import random
 
 from NeuralNetworkManager import NNTypes
 from NeuralNetworkManager import NNOptimizer
@@ -25,7 +26,7 @@ class COTONN:
         print("COTONN v0.2")
         
         # read static controller
-        filename = "controllers/dcdc/controller" # for smaller network use simple
+        filename = "controllers/dcdc/simple" # for smaller network use simple
         self.staticController = self.importer.readStaticController(filename)
         
         # define dataset
@@ -36,16 +37,18 @@ class COTONN:
         self.nnm.setType(NNTypes.MLP)
         self.nnm.setTrainingMethod(NNOptimizer.Adam)
         self.nnm.setDataSet(self.dataSet)
-        self.nnm.initializeNeuralNetwork(1)
+        self.nnm.rectangularHiddenLayers(3, 8)
+        self.nnm.initializeNeuralNetwork()
         
         # training
-        self.nnm.initializeTraining(0.005, 0.975, 200, 1000, 1e4)
+        self.nnm.initializeTraining(0.01, 1.0, 25, 1000)
         self.nnm.train()
         
-        # arbirary check
-        print("\nChecking first value:")
-        print(self.nnm.readSingle(self.dataSet.getX(0)))
-        print(self.dataSet.getY(0))
+        # validate by randomly picking inputs
+        print("\nValidating:")
+        for i in range(10):
+            r = round(random.random()*(self.dataSet.getSize()-1))
+            self.nnm.checkByIndex(r)
         
         # save nn
         #self.nnm.save()

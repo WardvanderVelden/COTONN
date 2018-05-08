@@ -71,12 +71,10 @@ class NeuralNetworkManager:
     
     def setDebugMode(self, value): self.debug_mode = value
     
-    # Reads the input from the neural net for a given state
-    def readSingle(self, x):
-        return self.nn.estimate([x])[0]
-        
-    # Estimate the hidden layer neurons based on input and output neurons and amount of hidden layers
-    def estimateNeurons(self, num_hidden_layers):
+    
+    # Hidden layer generation functions
+    # Linearly increase/decrease neurons per hidden layer based on the input and ouput neurons
+    def linearHiddenLayers(self, num_hidden_layers):
         self.layers = []
         
         x_dim = self.data_set.getXDim()
@@ -90,6 +88,46 @@ class NeuralNetworkManager:
         self.layers.append(y_dim)
         
         return self.layers
+    
+    
+    # Rectangular hidden layer
+    def rectangularHiddenLayers(self, width, height):
+        self.layers = []
+        
+        self.layers.append(self.data_set.getXDim())
+        for i in range(width):
+            self.layers.append(height)
+        self.layers.append(self.data_set.getYDim())
+        
+        
+    # Check a state against the dataset and nn by using its id in the dataset
+    def checkByIndex(self, index):
+        x = self.data_set.x[index]
+        estimation = self.nn.estimate([x])[0]
+        y = self.data_set.getY(index)
+        
+        y_eta = self.data_set.getYEta()
+        equal = True
+        for i in range(self.data_set.getYDim()):
+            if(not((y[i] - y_eta[i]) <= estimation[i] and (y[i] + y_eta[i]) > estimation[i])):
+                equal = False
+        
+        if(self.debug_mode):
+            print("u: " + str(y) + "u_: " + str(estimation) + " within etas: " + str(equal))
+            
+        return equal
+        
+        
+    # Check a state against the dataset and nn by using its id in the dataset
+    def checkByState(self, state):
+        index = 0
+        for i in range(self.data_set.getSize()):
+            if(self.data_set.getX(i) == state):
+                index = i
+                break
+              
+        return self.checkByIndex(index)
+        
     
     # Function which goes through all the states in the controller and checks if the neural network estimates the input correctly
     def checkFitness(self):
@@ -107,22 +145,24 @@ class NeuralNetworkManager:
                 
         return float(fit/size)
     
+    
     # Initialize neural network
-    def initializeNeuralNetwork(self, hidden):
+    def initializeNeuralNetwork(self):
         if(self.type == NNTypes.MLP):
             self.nn = MLP()
             self.nn.setDebugMode(False)
+            print("\nNeural network type: MLP")
             
         # Initialize network and loss function
-        self.estimateNeurons(hidden)
         self.nn.setNeurons(self.layers)
         self.nn.initializeNetwork(self.activation_function)
         
-        print("\nGenerated network neuron topology:")
-        print(self.layers)
+        print("Generated network neuron topology: " + str(self.layers))
         
         
-    def initializeTraining(self, learning_rate, fitness_threshold, batch_size, display_step, epoch_threshold = 1e6):
+    # Initialize training function
+    def initializeTraining(self, learning_rate, fitness_threshold, batch_size, display_step, epoch_threshold = -1):
+        print("\nInitializing training:")
         self.learning_rate = learning_rate
         self.fitness_threshold = fitness_threshold
         
@@ -134,16 +174,12 @@ class NeuralNetworkManager:
         self.nn.initializeLossFunction()
         self.nn.initializeTrainFunction(self.training_method, self.learning_rate)
         
-        print("\nTraining setting initialized")
         
-        
+    # Train network
     def train(self):
         print("\nTraining:")
-        i = 0
-        batch_index = 0
-        loss = 0
-        old_loss = loss
-        fit = 0.0
+
+        i, batch_index, loss, old_loss, fit = 0,0,0,0,0.0
         
         while True:
             batch = self.data_set.getBatch(self.batch_size, batch_index)
@@ -153,7 +189,12 @@ class NeuralNetworkManager:
                 fit = self.checkFitness()
                 print("i = " + str(i) + "\tepoch = " + str(self.epoch) + "\tloss = " + str(float("{0:.3f}".format(loss))) + "\tfit = " + str(float("{0:.3f}".format(fit))))
                 
-            if(self.epoch > self.epoch_threshold or fit >= self.fitness_threshold):
+            if(self.epoch > self.epoch_threshold and self.epoch_threshold > 0):
+                print("i = " + str(i) + "\tepoch = " + str(self.epoch) + "\tloss = " + str(float("{0:.3f}".format(loss))) + "\tfit = " + str(float("{0:.3f}".format(fit))))
+                print("Finished training, epoch threshold reached")
+                break
+            
+            if(fit >= self.fitness_threshold):
                 print("Finished training")
                 break
             
@@ -170,9 +211,12 @@ class NeuralNetworkManager:
             old_loss = loss
             
         
+    # Save network
     def save(self):
         print("\nSaving neural network")
     
+    
+    # Close session
     def close(self):
         self.nn.close()
         

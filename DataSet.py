@@ -9,6 +9,9 @@ class DataSet:
         self.x_bounds = [] # boundary elements of x 
         self.y_bounds = [] # boundary elements of y
         
+        self.x_eta = [] # etas of x
+        self.y_eta = [] # etas of y
+        
         self.x_dim = 1 # dimension of elements in x
         self.y_dim = 1 # dimension of elements in y
         
@@ -37,6 +40,9 @@ class DataSet:
     def getXDim(self): return self.x_dim
     def getYDim(self): return self.y_dim
     
+    def getXEta(self): return self.x_eta
+    def getYEta(self): return self.y_eta
+    
     # Add pair to dataset
     def add(self, x, y):
         self.x.append(x)
@@ -54,9 +60,14 @@ class DataSet:
         
         self.x_bounds = [self.getLowestX(), self.getHighestX()]
         self.y_bounds = [self.getHighestY(), self.getHighestY()]
+        
+        self.x_eta = controller.getStateSpaceEtas()
+        self.y_eta = controller.getInputSpaceEtas()
             
     # Read pseudo random subset from controller
     #def readSubsetFromController(self, controller, percentage):
+    
+    
     
     # Get a batch from the data set
     def getBatch(self, size, i):
@@ -82,16 +93,24 @@ class DataSet:
             new_x.append(bed.ntoba(self.x[i],n_x))
             new_y.append(bed.ntoba(self.y[i],n_y))
             
+        # set x and y to converted x and y
         self.x = new_x
         self.y = new_y
         
+        # set binary upper and lower bounds
         self.x_bounds = [bed.ntoba(self.x_bounds[0], n_x), bed.ntoba(self.x_bounds[1], n_x)]
         self.y_bounds = [bed.ntoba(self.y_bounds[0], n_y), bed.ntoba(self.y_bounds[1], n_y)]
         
+        # set the dimension of x and y (elements per element of x and y)
         self.x_dim = n_x
         self.y_dim = n_y
         
-        self.size = len(self.x)
+        # set etas of x and y (0.5 for binary)
+        self.x_eta = []
+        self.y_eta = []
+        for i in range(n_x):
+            self.x_eta.append(0.5)
+        for i in range(n_y):
+            self.y_eta.append(0.5)
         
-    
-    
+        self.size = len(self.x)

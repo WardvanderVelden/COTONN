@@ -36,6 +36,7 @@ class BinaryEncoderDecoder:
             
         return a
     
+    
     # Converts a binary array into a number
     def baton(self, array):
         binary = ""

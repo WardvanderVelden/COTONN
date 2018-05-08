@@ -29,9 +29,9 @@ class StaticController:
     def getInput(self, id): return self.inputs[id]
     
     # Get the input id and state id for a given state id
-    def getPairFromStateId(self, id):
+    def getPairFromState(self, state):
         for i in range(self.state_size):
-            if(self.states[i] == id):
+            if(self.states[i] == state):
                 return [self.states[i], self.inputs[i]]
         return None
     
@@ -42,27 +42,27 @@ class StaticController:
         return None
         
     # Get the input id corresponding to a given state id
-    def getInputFromStateId(self, id):
+    def getInputFromState(self, state):
         for i in range(self.state_size):
-            if(self.states[i]  == id):
+            if(self.states[i]  == state):
                 return self.inputs[i]
         print("ID does not correspond to a state in the winning domain.")
         return None
     
     # Get lowest state id contained in the controller
-    def getLowestStateID(self):
+    def getLowestState(self):
         return min(int(s) for s in self.states)
     
     # Get highest state id contained in the controller
-    def getHighestStateID(self):
+    def getHighestState(self):
         return max(int(s) for s in self.states)
     
     # Get lowest input id contained in the controller
-    def getLowestInputID(self):
+    def getLowestInput(self):
         return min(int(i) for i in self.inputs)
     
     # Get highest input id contained in the controller
-    def getHighestInputID(self):
+    def getHighestInput(self):
         return max(int(i) for i in self.inputs)
     
     # Get the size of the controller

@@ -77,14 +77,19 @@ class MLP:
         def initializeTrainFunction(self, function, learning_rate):
             if(function == NeuralNetworkManager.NNOptimizer.Gradient_Descent):
                 self.train_function = tf.train.GradientDescentOptimizer(learning_rate).minimize(self.loss_function)
+                print("Training method: Gradient Descent")
             elif(function == NeuralNetworkManager.NNOptimizer.Adadelta):
                 self.train_function = tf.train.AdadeltaOptimizer(learning_rate).minimize(self.loss_function)
+                print("Training method: AdaDelta")
             elif(function == NeuralNetworkManager.NNOptimizer.Adagrad):
                 self.train_function = tf.train.AdagradOptimizer(learning_rate).minimize(self.loss_function)
+                print("Training method: Adagrad")
             elif(function == NeuralNetworkManager.NNOptimizer.Adam):
                 self.train_function = tf.train.AdamOptimizer(learning_rate).minimize(self.loss_function)
+                print("Training method: Adam")
             else:
                 self.train_function = tf.train.GradientDescentOptimizer(learning_rate).minimize(self.loss_function)
+                print("Training method: Gradient Descent")
      
             self.session.run(tf.global_variables_initializer())
             
