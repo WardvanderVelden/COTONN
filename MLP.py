@@ -10,6 +10,7 @@ class MLP:
             # Network parameters
             self.layers = []
             self.num_layers = 0
+            self.keep_prob = 1
             
             # Neural network general variables (MLP)
             self.s = None 
@@ -33,10 +34,12 @@ class MLP:
         def setNeurons(self, layers):
             self.num_layers = len(layers)
             self.layers = layers
+        def setKeepProbability(self, value): self.keep_prob = value
       
         # Getters
         def getNumLayers(self): return self.num_layers
         def getLayers(self): return self.layers
+        def getKeepProbability(self): return self.keep_prob
         
         
         # Initialize network function which intializes an initial network with random weights and biases
@@ -54,9 +57,9 @@ class MLP:
 
             # Define network
             tf_layers = [None]*(self.num_layers - 1)   
-            tf_layers[0] = tf.sigmoid(tf.add(tf.matmul(self.x, self.weights[0]), self.biases[0])) # input layer
+            tf_layers[0] = tf.nn.dropout(tf.sigmoid(tf.add(tf.matmul(self.x, self.weights[0]), self.biases[0])),self.keep_prob) # input layer
             for i in range(1, self.num_layers - 1):
-                tf_layers[i] = tf.sigmoid(tf.add(tf.matmul(tf_layers[i-1], self.weights[i]), self.biases[i]))
+                tf_layers[i] = tf.nn.dropout(tf.sigmoid(tf.add(tf.matmul(tf_layers[i-1], self.weights[i]), self.biases[i])),self.keep_prob)
                 
             self.network = tf_layers[-1]
             

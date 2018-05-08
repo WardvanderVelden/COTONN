@@ -23,10 +23,10 @@ class COTONN:
 
     # Test function to automatically convert a plain controller to a simple MLP network
     def run(self):      
-        print("COTONN v0.2")
+        print("COTONN v0.2.1")
         
         # read static controller
-        filename = "controllers/dcdc/simple" # for smaller network use simple
+        filename = "controllers/dcdc/controller" # for smaller network use simple
         self.staticController = self.importer.readStaticController(filename)
         
         # define dataset
@@ -37,21 +37,21 @@ class COTONN:
         self.nnm.setType(NNTypes.MLP)
         self.nnm.setTrainingMethod(NNOptimizer.Adam)
         self.nnm.setDataSet(self.dataSet)
-        self.nnm.rectangularHiddenLayers(3, 8)
-        self.nnm.initializeNeuralNetwork()
+        self.nnm.rectangularHiddenLayers(3, 10)
+        self.nnm.initializeNeuralNetwork(0.95)
         
         # training
-        self.nnm.initializeTraining(0.01, 1.0, 25, 1000)
+        self.nnm.initializeTraining(0.005, 0.95, 200, 1000)
         self.nnm.train()
         
         # validate by randomly picking inputs
         print("\nValidating:")
         for i in range(10):
             r = round(random.random()*(self.dataSet.getSize()-1))
-            self.nnm.checkByIndex(r)
+            self.nnm.checkByIndex(r, True)
         
         # save nn
-        #self.nnm.save()
+        self.nnm.save()
         
         # close session
         self.nnm.close()
