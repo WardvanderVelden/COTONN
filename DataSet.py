@@ -1,5 +1,8 @@
 from BinaryEncoderDecoder import BinaryEncoderDecoder
 
+import math
+import random
+
 # Dataset class which will contain the data for nn training and functions to read controllers into the specific
 class DataSet:
     def __init__(self):
@@ -63,10 +66,43 @@ class DataSet:
         
         self.x_eta = controller.getStateSpaceEtas()
         self.y_eta = controller.getInputSpaceEtas()
+        
+        print("Dataset size: " + str(self.size))
             
     # Read pseudo random subset from controller
-    #def readSubsetFromController(self, controller, percentage):
-    
+    def readSubsetFromController(self, controller, percentage):
+        size = controller.getSize()
+        ids = []
+        new_size = round(size*percentage)
+        
+        # add highest and lowest controller to make sure the set had the same input and output format
+        h_s, l_s = controller.getHighestState(), controller.getLowestState()
+        ids.append(controller.getIndexOfState(l_s))
+        ids.append(controller.getIndexOfState(h_s))
+        
+        # get random ids 
+        for i in range(new_size - 2):
+            while True:
+                r = math.floor(random.random()*size)
+                if r not in ids:
+                    ids.append(r)
+                    break
+        
+        # fill dataset
+        for i in range(new_size):
+            pair = controller.getPairFromIndex(ids[i])
+            self.x.append(pair[0])
+            self.y.append(pair[1])
+            
+        self.size = len(self.x)
+                    
+        self.x_bounds = [self.getLowestX(), self.getHighestX()]
+        self.y_bounds = [self.getHighestY(), self.getHighestY()]
+        
+        self.x_eta = controller.getStateSpaceEtas()
+        self.y_eta = controller.getInputSpaceEtas()
+        
+        print("Dataset size: " + str(self.size))
     
     
     # Get a batch from the data set

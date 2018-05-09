@@ -1,0 +1,10 @@
+Note converged controllers here with parameters:
+
+For DCDC: 
+	MLP, Adam, Sigmoid, Prob: 1.0, hidden_layers: 2,12, 
+	learning_rate: 0.009, fitness: 0.999, batch_size: 100, display: 1000
+
+For Vehicle:
+	MLP, Adam, Sigmoid, Prob: 1.0, hidden_layers: 2, 32
+	tried: 0.0025, 0.025
+	with subset of 0.01 and learning_rate: 0.005
