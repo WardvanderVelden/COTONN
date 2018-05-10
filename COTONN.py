@@ -13,49 +13,86 @@ from NeuralNetworkManager import NNActivationFunction
 # Main class from which all functions are called
 class COTONN:
     def __init__(self):
+        print("COTONN v0.3\n")
+        
         self.importer = Importer()
         self.exporter = Exporter()
         self.nnm = NeuralNetworkManager()
         self.staticController = StaticController()
-        self.dataSet = DataSet()
         
-        self.debug_mode = True
+        self.debug_mode = False
         
         self.importer.setDebugMode(False)
         self.nnm.setDebugMode(self.debug_mode)
 
+
+    # Generate MLP from fullset
+    def fullSetMLP(self, filename, layer_width, layer_height, learning_rate, fitness_rate, batch_size, display_step):
+        self.staticController = self.importer.readStaticController(filename)
+        
+        fullSet = DataSet()
+        fullSet.readSetFromController(self.staticController)
+        fullSet.formatToBinary()
+        
+        self.nnm.setType(NNTypes.MLP)
+        self.nnm.setTrainingMethod(NNOptimizer.Adam)
+        self.nnm.setActivationFunction(NNActivationFunction.Sigmoid)
+        self.nnm.setDataSet(fullSet)
+        
+        self.nnm.rectangularHiddenLayers(layer_width, layer_height)
+        self.nnm.initializeNeuralNetwork()
+        
+        #self.nnm.setShuffleRate(10000)
+        self.nnm.initializeTraining(learning_rate, fitness_rate, batch_size, display_step)
+        self.nnm.train()
+        
+        self.nnm.plot()
+        
+        self.nnm.close()
+
+
     # Test function to automatically convert a plain controller to a simple MLP network
     def run(self):      
-        print("COTONN v0.2.3")
-        
+
         # read static controller
-        filename = "controllers/test/controller" # for smaller network use simple
+        filename = "controllers/vehicle/controller" # for smaller network use simple
         self.staticController = self.importer.readStaticController(filename)
         
         # define dataset
-        self.dataSet.readSetFromController(self.staticController)
-        self.dataSet.formatToBinary()
+        self.fullSet.readSetFromController(self.staticController)
+        self.fullSet.formatToBinary()
+        self.subSet.readSubsetFromController(self.staticController, 0.02)
+        self.subSet.formatToBinary()
         
         # specify neural network
         self.nnm.setType(NNTypes.MLP)
         self.nnm.setTrainingMethod(NNOptimizer.Adam)
         self.nnm.setActivationFunction(NNActivationFunction.Sigmoid)
-        self.nnm.setDataSet(self.dataSet)
-        self.nnm.rectangularHiddenLayers(4, 16)
-        self.nnm.initializeNeuralNetwork(0.99)
+        self.nnm.setDataSet(self.subSet)
+        
+        self.nnm.setKeepProbability(1.0)
+        self.nnm.rectangularHiddenLayers(2, 8)
+        self.nnm.initializeNeuralNetwork()
         
         # training
-        self.nnm.initializeTraining(0.05, 0.90, 250, 1000, 500)
+        self.nnm.initializeTraining(0.015, 0.99, 100, 1000)
         self.nnm.train()
         
-        # validate by randomly picking inputs
+        # check fitness with the full set
+        self.nnm.setDataSet(self.fullSet)
+        fit = self.nnm.checkFitness()
+        print("\nFullset fitness: " + str(float("{0:.3f}".format(fit))))
+        
         print("\nValidating:")
         for i in range(10):
-            r = round(random.random()*(self.dataSet.getSize()-1))
+            r = round(random.random()*(self.fullSet.getSize()-1))
             self.nnm.checkByIndex(r, True)
         
         # save nn
-        #self.exporter.saveNetwork(self.nnm, "/log/model.ckpt")
+        self.exporter.saveNetwork(self.nnm, "./nn/model.ckpt")
+        
+        # plot nn log variables
+        self.nnm.plot()
         
         # close session
         self.nnm.close()
@@ -71,6 +108,5 @@ class COTONN:
         print(self.dataSet.getBatch(self.dataSet.getSize(),0))
 
 cotonn = COTONN()
-#cotonn.testShuffle()
-cotonn.run()
+cotonn.fullSetMLP("controllers/dcdc/controller", 2, 8, 0.0015, 0.9, 100, 1000)
 
