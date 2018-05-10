@@ -53,6 +53,7 @@ class COTONN:
 
     # Test function to automatically convert a plain controller to a simple MLP network
     def run(self):      
+
         # read static controller
         filename = "controllers/vehicle/controller" # for smaller network use simple
         self.staticController = self.importer.readStaticController(filename)
@@ -95,6 +96,16 @@ class COTONN:
         
         # close session
         self.nnm.close()
+        
+    def testShuffle(self):
+        filename = "controllers/dcdc/simple" # for smaller network use simple
+        self.staticController = self.importer.readStaticController(filename)
+        
+        self.dataSet.readSetFromController(self.staticController)
+        #self.dataSet.formatToBinary()
+        print(self.dataSet.getBatch(self.dataSet.getSize(),0))
+        self.dataSet.shuffle()
+        print(self.dataSet.getBatch(self.dataSet.getSize(),0))
 
 cotonn = COTONN()
 cotonn.fullSetMLP("controllers/dcdc/controller", 2, 8, 0.0015, 0.9, 100, 1000)

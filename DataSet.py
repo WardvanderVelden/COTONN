@@ -103,6 +103,22 @@ class DataSet:
         self.y_eta = controller.getInputSpaceEtas()
         
         print("Dataset size: " + str(self.size))
+
+        
+    # Shuffle data
+    def shuffle(self):
+        pairs = []
+        for i in range(self.size):
+            pairs.append([self.x[i], self.y[i]])
+            
+        random.shuffle(pairs)
+        n_x, n_y = [], []
+        for i in range(self.size):
+            n_x.append(pairs[i][0])
+            n_y.append(pairs[i][1])
+            
+        self.x = n_x
+        self.y = n_y
     
     
     # Get a batch from the data set

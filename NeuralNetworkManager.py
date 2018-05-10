@@ -44,6 +44,7 @@ class NeuralNetworkManager:
         self.learning_rate = 0.1
         self.fitness_threshold = 0.75
         self.batch_size = 100
+        self.shuffle_rate = 100
         self.display_step = 1000
         
         self.epoch = 0
@@ -72,6 +73,7 @@ class NeuralNetworkManager:
     def getEpoch(self): return self.epoch
     def getEpochThreshold(self): return self.epoch_threshold
     def getKeepProbability(self): return self.keep_prob
+    def getShuffleRate(self): return self.shuffle_rate
     
     def setType(self, type): self.type = type
     def setTrainingMethod(self, optimizer): self.training_method = optimizer
@@ -81,7 +83,8 @@ class NeuralNetworkManager:
     def setBatchSize(self, value): self.batch_size = value
     def setDisplayStep(self, value): self.display_step = value
     def setEpochThreshold(self, keep_probability): self.epoch_threshold = keep_probability
-    def setKeepProbability(self, value): self.keep_prob = value
+    def setKeepProbability(self, value): self.drop_out = value
+    def setShuffleRate(self, value): self.shuffle_rate = value
 
     def setDataSet(self, data_set): self.data_set = data_set
     
@@ -164,7 +167,7 @@ class NeuralNetworkManager:
     def initializeNeuralNetwork(self):
         if(self.debug_mode):
             print("\nNeural network initialization:")
-        
+
         if(self.type == NNTypes.MLP):
             self.nn = MLP()
             self.nn.setDebugMode(False)
@@ -184,13 +187,21 @@ class NeuralNetworkManager:
     def initializeTraining(self, learning_rate, fitness_threshold, batch_size, display_step, epoch_threshold = -1):
         if(self.debug_mode):
             print("\nInitializing training:")
+            
+        print("Generated network neuron topology: " + str(self.layers))
+        if(keep_prob != 1.0):
+            print("Neuron keep probability: " + str(self.nn.getKeepProbability()))
+        
+        
+    # Initialize training function
+    def initializeTraining(self, learning_rate, fitness_threshold, batch_size, display_step, shuffle_rate = 500, epoch_threshold = -1):
+        print("\nInitializing training:")
         self.learning_rate = learning_rate
         self.fitness_threshold = fitness_threshold
-        
         self.batch_size = batch_size
         self.display_step = display_step
-        
         self.epoch_threshold = epoch_threshold
+        self.shuffle_rate = shuffle_rate
         
         self.nn.initializeLossFunction()
         self.nn.initializeTrainFunction(self.training_method, self.learning_rate)
@@ -209,6 +220,8 @@ class NeuralNetworkManager:
         while self.training:
             batch = self.data_set.getBatch(self.batch_size, batch_index)
             loss = self.nn.trainStep(batch)
+            
+            if(i % self.shuffle_rate == 0 and i != 0): self.data_set.shuffle()
             
             if(i % self.display_step == 0 and i != 0):
                 fit = self.checkFitness()
