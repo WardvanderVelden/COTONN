@@ -8,6 +8,7 @@ import numpy
 import signal
 import time
 import matplotlib.pyplot as plt
+import random
 
 class NNTypes(Enum):
       MLP = 1
@@ -44,7 +45,7 @@ class NeuralNetworkManager:
         self.learning_rate = 0.1
         self.fitness_threshold = 0.75
         self.batch_size = 100
-        self.shuffle_rate = 100
+        self.shuffle_rate = 2500
         self.display_step = 1000
         
         self.epoch = 0
@@ -83,7 +84,7 @@ class NeuralNetworkManager:
     def setBatchSize(self, value): self.batch_size = value
     def setDisplayStep(self, value): self.display_step = value
     def setEpochThreshold(self, keep_probability): self.epoch_threshold = keep_probability
-    def setKeepProbability(self, value): self.drop_out = value
+    def setKeepProbability(self, value): self.keep_prob = value
     def setShuffleRate(self, value): self.shuffle_rate = value
 
     def setDataSet(self, data_set): self.data_set = data_set
@@ -117,6 +118,53 @@ class NeuralNetworkManager:
         for i in range(width):
             self.layers.append(height)
         self.layers.append(self.data_set.getYDim())
+
+
+     # Initialize neural network
+    def initializeNeuralNetwork(self):
+        if(self.debug_mode):
+            print("\nNeural network initialization:")
+
+        if(self.type == NNTypes.MLP):
+            self.nn = MLP()
+            self.nn.setDebugMode(self.debug_mode)
+            if(self.debug_mode):
+                print("Neural network type: MLP")
+            
+        # Initialize network and loss function
+        self.nn.setNeurons(self.layers)
+        self.nn.setKeepProbability(self.keep_prob)
+        self.nn.setActivationFunction(self.activation_function)
+        self.nn.initializeNetwork()
+        
+        # Print neural network status
+        if(self.debug_mode):
+            print("Generated network neuron topology: " + str(self.layers) + " with keep probability: " + str(self.nn.getKeepProbability()))
+        
+        
+    # Initialize training function
+    def initializeTraining(self, learning_rate, fitness_threshold, batch_size, display_step, epoch_threshold = -1):
+        if(self.debug_mode):
+            print("\nInitializing training:")
+            
+        print("Generated network neuron topology: " + str(self.layers))
+        if(keep_prob != 1.0):
+            print("Neuron keep probability: " + str(self.nn.getKeepProbability()))
+        
+        
+    # Initialize training function
+    def initializeTraining(self, learning_rate, fitness_threshold, batch_size, display_step, epoch_threshold = -1, shuffle_rate = 500):
+        if(self.debug_mode):
+            print("\nInitializing training:")
+        self.learning_rate = learning_rate
+        self.fitness_threshold = fitness_threshold
+        self.batch_size = batch_size
+        self.display_step = display_step
+        self.epoch_threshold = epoch_threshold
+        self.shuffle_rate = shuffle_rate
+        
+        self.nn.initializeLossFunction()
+        self.nn.initializeTrainFunction(self.training_method, self.learning_rate)
         
         
     # Check a state against the dataset and nn by using its id in the dataset
@@ -135,6 +183,18 @@ class NeuralNetworkManager:
             print("u: " + str(y) + " u_: " + str(numpy.round(estimation,2)) + " within etas: " + str(equal))
             
         return equal
+
+
+    # Randomly check neural network against a dataset
+    def randomCheck(self, data_set):
+        self.data_set = data_set
+        fit = self.checkFitness()
+        print("\nDataset fitness: " + str(float("{0:.3f}".format(fit))))
+        
+        print("\nValidating:")
+        for i in range(10):
+            r = round(random.random()*(self.data_set.getSize()-1))
+            self.checkByIndex(r, True)
     
     
     # Calculate fitness based on the dataset
@@ -161,55 +221,11 @@ class NeuralNetworkManager:
                 wrong.append(i)
                 
         return float(fit/size)
-    
-    
-    # Initialize neural network
-    def initializeNeuralNetwork(self):
-        if(self.debug_mode):
-            print("\nNeural network initialization:")
 
-        if(self.type == NNTypes.MLP):
-            self.nn = MLP()
-            self.nn.setDebugMode(False)
-            print("Neural network type: MLP")
-            
-        # Initialize network and loss function
-        self.nn.setNeurons(self.layers)
-        self.nn.setKeepProbability(self.keep_prob)
-        self.nn.initializeNetwork()
-        
-        # Print neural network status
-        if(self.debug_mode):
-            print("Generated network neuron topology: " + str(self.layers) + " with keep probability: " + str(self.nn.getKeepProbability()))
-        
-        
-    # Initialize training function
-    def initializeTraining(self, learning_rate, fitness_threshold, batch_size, display_step, epoch_threshold = -1):
-        if(self.debug_mode):
-            print("\nInitializing training:")
-            
-        print("Generated network neuron topology: " + str(self.layers))
-        if(keep_prob != 1.0):
-            print("Neuron keep probability: " + str(self.nn.getKeepProbability()))
-        
-        
-    # Initialize training function
-    def initializeTraining(self, learning_rate, fitness_threshold, batch_size, display_step, shuffle_rate = 500, epoch_threshold = -1):
-        print("\nInitializing training:")
-        self.learning_rate = learning_rate
-        self.fitness_threshold = fitness_threshold
-        self.batch_size = batch_size
-        self.display_step = display_step
-        self.epoch_threshold = epoch_threshold
-        self.shuffle_rate = shuffle_rate
-        
-        self.nn.initializeLossFunction()
-        self.nn.initializeTrainFunction(self.training_method, self.learning_rate)
-        
         
     # Train network
     def train(self):
-        self.clearLogVariables()
+        self.clear()
         
         print("\nTraining (Ctrl+C to interrupt):")
         signal.signal(signal.SIGINT, self.interrupt)
@@ -225,10 +241,10 @@ class NeuralNetworkManager:
             
             if(i % self.display_step == 0 and i != 0):
                 fit = self.checkFitness()
-                self.addToPlot(loss, fit, i)
+                self.addToLog(loss, fit, i)
                 print("i = " + str(i) + "\tepoch = " + str(self.epoch) + "\tloss = " + str(float("{0:.3f}".format(loss))) + "\tfit = " + str(float("{0:.3f}".format(fit))))
                 
-            if(self.epoch > self.epoch_threshold and self.epoch_threshold > 0):
+            if(self.epoch >= self.epoch_threshold and self.epoch_threshold > 0):
                 print("i = " + str(i) + "\tepoch = " + str(self.epoch) + "\tloss = " + str(float("{0:.3f}".format(loss))) + "\tfit = " + str(float("{0:.3f}".format(fit))))
                 print("Finished training, epoch threshold reached")
                 break
@@ -264,27 +280,19 @@ class NeuralNetworkManager:
     # Interrupt handler to interrupt the training while in progress
     def interrupt(self, signal, frame):
         self.training = False
-        
-        
-    # Clear log variables
-    def clearLogVariables(self):
-        self.fitnesses = []
-        self.iterations = []
-        self.losses = []
-        
+          
         
     # Plotting loss and fitness functions
-    def plot(self):
-        print("\nFitness and loss plots: ")
-        
+    def plot(self):      
+        plt.figure(1)
         plt.plot(self.iterations, self.losses, 'bo')
         plt.xlabel("Iterations")
         plt.ylabel("Loss")
         plt.grid()
         x1,x2,y1,y2 = plt.axis()
-        plt.axis((x1,x2,0,y2+1))
-        plt.show()
+        plt.axis((x1,x2,0,y2+0.1))
         
+        plt.figure(2)
         plt.plot(self.iterations, self.fitnesses, 'r-')
         plt.xlabel("Iterations")
         plt.ylabel("Fitness")
@@ -294,10 +302,20 @@ class NeuralNetworkManager:
         plt.show()
         
 
-    def addToPlot(self, loss, fit, iteration):
+    # Add to log
+    def addToLog(self, loss, fit, iteration):
         self.losses.append(loss)
         self.fitnesses.append(fit)
         self.iterations.append(iteration)
+
+    # Clear variables
+    def clear(self):
+        self.epoch = 0
+        self.training = True
+
+        self.fitnesses = []
+        self.iterations = []
+        self.losses = []
         
     # Save network
     def save(self, filename):

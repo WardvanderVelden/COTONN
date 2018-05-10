@@ -4,16 +4,16 @@ from NeuralNetworkManager import NeuralNetworkManager
 from StaticController import StaticController
 from DataSet import DataSet
 
-import random
-
 from NeuralNetworkManager import NNTypes
 from NeuralNetworkManager import NNOptimizer
 from NeuralNetworkManager import NNActivationFunction
 
+import matplotlib.pyplot as plt
+
 # Main class from which all functions are called
 class COTONN:
     def __init__(self):
-        print("COTONN v0.3\n")
+        print("COTONN v0.4\n")
         
         self.importer = Importer()
         self.exporter = Exporter()
@@ -27,86 +27,108 @@ class COTONN:
 
 
     # Generate MLP from fullset
-    def fullSetMLP(self, filename, layer_width, layer_height, learning_rate, fitness_rate, batch_size, display_step):
+    def fullSetMLP(self, filename, layer_width, layer_height, learning_rate, keep_prob, fitness_rate, batch_size, display_step):
         self.staticController = self.importer.readStaticController(filename)
         
         fullSet = DataSet()
         fullSet.readSetFromController(self.staticController)
         fullSet.formatToBinary()
         
+        self.nnm.setDebugMode(True)
         self.nnm.setType(NNTypes.MLP)
         self.nnm.setTrainingMethod(NNOptimizer.Adam)
         self.nnm.setActivationFunction(NNActivationFunction.Sigmoid)
         self.nnm.setDataSet(fullSet)
         
+        self.nnm.setKeepProbability(keep_prob)
         self.nnm.rectangularHiddenLayers(layer_width, layer_height)
         self.nnm.initializeNeuralNetwork()
         
-        #self.nnm.setShuffleRate(10000)
+        self.nnm.setShuffleRate(2500)
         self.nnm.initializeTraining(learning_rate, fitness_rate, batch_size, display_step)
         self.nnm.train()
         
         self.nnm.plot()
+
+        self.nnm.randomCheck(fullSet)
+
+        #self.exporter.saveNetwork(self.nnm, "./nn/model.ckpt")
         
         self.nnm.close()
 
-
-    # Test function to automatically convert a plain controller to a simple MLP network
-    def run(self):      
-
-        # read static controller
-        filename = "controllers/vehicle/controller" # for smaller network use simple
+    # Generate MLP from subset
+    def subSetMLP(self, filename, percentage, layer_width, layer_height, learning_rate, keep_prob, fitness_rate, batch_size, display_step):
         self.staticController = self.importer.readStaticController(filename)
         
-        # define dataset
-        self.fullSet.readSetFromController(self.staticController)
-        self.fullSet.formatToBinary()
-        self.subSet.readSubsetFromController(self.staticController, 0.02)
-        self.subSet.formatToBinary()
+        fullSet = DataSet()
+        fullSet.readSetFromController(self.staticController)
+        fullSet.formatToBinary()
+
+        subSet = DataSet()
+        subSet.readSubsetFromController(self.staticController, percentage)
+        subSet.formatToBinary()
         
-        # specify neural network
+        self.nnm.setDebugMode(True)
         self.nnm.setType(NNTypes.MLP)
         self.nnm.setTrainingMethod(NNOptimizer.Adam)
         self.nnm.setActivationFunction(NNActivationFunction.Sigmoid)
-        self.nnm.setDataSet(self.subSet)
+        self.nnm.setDataSet(subSet)
         
-        self.nnm.setKeepProbability(1.0)
-        self.nnm.rectangularHiddenLayers(2, 8)
+        self.nnm.setKeepProbability(keep_prob)
+        self.nnm.rectangularHiddenLayers(layer_width, layer_height)
         self.nnm.initializeNeuralNetwork()
         
-        # training
-        self.nnm.initializeTraining(0.015, 0.99, 100, 1000)
+        self.nnm.setShuffleRate(2500)
+        self.nnm.initializeTraining(learning_rate, fitness_rate, batch_size, display_step)
         self.nnm.train()
         
-        # check fitness with the full set
-        self.nnm.setDataSet(self.fullSet)
-        fit = self.nnm.checkFitness()
-        print("\nFullset fitness: " + str(float("{0:.3f}".format(fit))))
-        
-        print("\nValidating:")
-        for i in range(10):
-            r = round(random.random()*(self.fullSet.getSize()-1))
-            self.nnm.checkByIndex(r, True)
-        
-        # save nn
-        self.exporter.saveNetwork(self.nnm, "./nn/model.ckpt")
-        
-        # plot nn log variables
         self.nnm.plot()
+
+        self.nnm.randomCheck(fullSet)
+
+        #self.exporter.saveNetwork(self.nnm, "./nn/model.ckpt")
         
-        # close session
         self.nnm.close()
-        
-    def testShuffle(self):
-        filename = "controllers/dcdc/simple" # for smaller network use simple
+
+
+    # Scout learningrate convergence
+    def scoutLearningRateConvergence(self, filename, layer_width, layer_height, epoch_threshold, rates, batch_size, display_step):
         self.staticController = self.importer.readStaticController(filename)
-        
-        self.dataSet.readSetFromController(self.staticController)
-        #self.dataSet.formatToBinary()
-        print(self.dataSet.getBatch(self.dataSet.getSize(),0))
-        self.dataSet.shuffle()
-        print(self.dataSet.getBatch(self.dataSet.getSize(),0))
+
+        dataSet = DataSet()
+        dataSet.readSetFromController(self.staticController)
+        dataSet.formatToBinary()
+
+        self.nnm.setDebugMode(False)
+
+        fitness = []
+
+        for r in rates:
+            print("\nLearning rate: " + str(r))
+            self.nnm.setType(NNTypes.MLP)
+            self.nnm.setTrainingMethod(NNOptimizer.Adam)
+            self.nnm.setActivationFunction(NNActivationFunction.Sigmoid)
+            self.nnm.setDataSet(dataSet)
+            
+            self.nnm.rectangularHiddenLayers(layer_width, layer_height)
+            self.nnm.initializeNeuralNetwork()
+            
+            self.nnm.initializeTraining(r, 1.0, batch_size, display_step, epoch_threshold)
+            self.nnm.train()
+
+            fitness.append(self.nnm.checkFitness())
+
+            self.nnm.close()
+
+        # Plot
+        plt.semilogx(rates, fitness, 'r-')
+        plt.xlabel("Rates")
+        plt.ylabel("Fitness")
+        plt.grid()
+        (x1,x2,y1,y2) = plt.axis()
+        plt.axis((min(rates),max(rates),0.0,y2+0.1))
+        plt.show()
 
 cotonn = COTONN()
-cotonn.fullSetMLP("controllers/dcdc/controller", 2, 8, 0.0015, 0.9, 100, 1000)
-
+#cotonn.scoutLearningRateConvergence("controllers/vehicle/controller", 2, 256, 300, [0.01, 0.009, 0.008, 0.007, 0.006, 0.005, 0.004, 0.003], 500, 5000)
+cotonn.fullSetMLP("controllers/vehicle/controller", 2, 256, 0.01, 0.5, 0.995, 1000, 1000)
