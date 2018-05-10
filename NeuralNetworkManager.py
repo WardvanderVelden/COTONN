@@ -162,7 +162,9 @@ class NeuralNetworkManager:
     
     # Initialize neural network
     def initializeNeuralNetwork(self):
-        print("\nNeural network initialization:")
+        if(self.debug_mode):
+            print("\nNeural network initialization:")
+        
         if(self.type == NNTypes.MLP):
             self.nn = MLP()
             self.nn.setDebugMode(False)
@@ -174,12 +176,14 @@ class NeuralNetworkManager:
         self.nn.initializeNetwork()
         
         # Print neural network status
-        print("Generated network neuron topology: " + str(self.layers) + " with keep probability: " + str(self.nn.getKeepProbability()))
+        if(self.debug_mode):
+            print("Generated network neuron topology: " + str(self.layers) + " with keep probability: " + str(self.nn.getKeepProbability()))
         
         
     # Initialize training function
     def initializeTraining(self, learning_rate, fitness_threshold, batch_size, display_step, epoch_threshold = -1):
-        print("\nInitializing training:")
+        if(self.debug_mode):
+            print("\nInitializing training:")
         self.learning_rate = learning_rate
         self.fitness_threshold = fitness_threshold
         
@@ -194,6 +198,8 @@ class NeuralNetworkManager:
         
     # Train network
     def train(self):
+        self.clearLogVariables()
+        
         print("\nTraining (Ctrl+C to interrupt):")
         signal.signal(signal.SIGINT, self.interrupt)
 
@@ -232,8 +238,6 @@ class NeuralNetworkManager:
         end_time = time.time()
         print("Time taken: " + self.formatTime(end_time - start_time))
         
-        self.plot()
-        
         
     # Format
     def formatTime(self, time):
@@ -247,6 +251,13 @@ class NeuralNetworkManager:
     # Interrupt handler to interrupt the training while in progress
     def interrupt(self, signal, frame):
         self.training = False
+        
+        
+    # Clear log variables
+    def clearLogVariables(self):
+        self.fitnesses = []
+        self.iterations = []
+        self.losses = []
         
         
     # Plotting loss and fitness functions
