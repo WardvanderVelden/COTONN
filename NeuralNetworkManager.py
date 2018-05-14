@@ -143,25 +143,13 @@ class NeuralNetworkManager:
         
         
     # Initialize training function
-    def initializeTraining(self, learning_rate, fitness_threshold, batch_size, display_step, epoch_threshold = -1):
-        if(self.debug_mode):
-            print("\nInitializing training:")
-            
-        print("Generated network neuron topology: " + str(self.layers))
-        if(keep_prob != 1.0):
-            print("Neuron keep probability: " + str(self.nn.getKeepProbability()))
-        
-        
-    # Initialize training function
-    def initializeTraining(self, learning_rate, fitness_threshold, batch_size, display_step, epoch_threshold = -1, shuffle_rate = 500):
-        if(self.debug_mode):
-            print("\nInitializing training:")
+    def initializeTraining(self, learning_rate, fitness_threshold, batch_size, display_step, epoch_threshold = -1):      
         self.learning_rate = learning_rate
         self.fitness_threshold = fitness_threshold
         self.batch_size = batch_size
         self.display_step = display_step
         self.epoch_threshold = epoch_threshold
-        self.shuffle_rate = shuffle_rate
+        self.shuffle_rate = 10000
         
         self.nn.initializeLossFunction()
         self.nn.initializeTrainFunction(self.training_method, self.learning_rate)
