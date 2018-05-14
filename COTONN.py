@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 # Main class from which all functions are called
 class COTONN:
     def __init__(self):
-        print("COTONN v0.4\n")
+        print("COTONN v0.4.2\n")
         
         self.importer = Importer()
         self.exporter = Exporter()
@@ -27,7 +27,7 @@ class COTONN:
 
 
     # Generate MLP from fullset
-    def fullSetMLP(self, filename, layer_width, layer_height, learning_rate, keep_prob, fitness_rate, batch_size, display_step):
+    def fullSetMLP(self, filename, layer_width, layer_height, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step):
         self.staticController = self.importer.readStaticController(filename)
         
         fullSet = DataSet()
@@ -40,12 +40,10 @@ class COTONN:
         self.nnm.setActivationFunction(NNActivationFunction.Sigmoid)
         self.nnm.setDataSet(fullSet)
         
-        self.nnm.setKeepProbability(keep_prob)
+        self.nnm.setDropoutRate(dropout_rate)
         self.nnm.rectangularHiddenLayers(layer_width, layer_height)
-        self.nnm.initializeNeuralNetwork()
+        self.nnm.initialize(learning_rate, fitness_threshold, batch_size, display_step, -1, 5000)
         
-        self.nnm.setShuffleRate(2500)
-        self.nnm.initializeTraining(learning_rate, fitness_rate, batch_size, display_step)
         self.nnm.train()
         
         self.nnm.plot()
@@ -57,7 +55,7 @@ class COTONN:
         self.nnm.close()
 
     # Generate MLP from subset
-    def subSetMLP(self, filename, percentage, layer_width, layer_height, learning_rate, keep_prob, fitness_rate, batch_size, display_step):
+    def subSetMLP(self, filename, percentage, layer_width, layer_height, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step):
         self.staticController = self.importer.readStaticController(filename)
         
         fullSet = DataSet()
@@ -74,12 +72,10 @@ class COTONN:
         self.nnm.setActivationFunction(NNActivationFunction.Sigmoid)
         self.nnm.setDataSet(subSet)
         
-        self.nnm.setKeepProbability(keep_prob)
+        self.nnm.setDropoutRate(dropout_rate)
         self.nnm.rectangularHiddenLayers(layer_width, layer_height)
-        self.nnm.initializeNeuralNetwork()
+        self.nnm.initialize(learning_rate, fitness_threshold, batch_size, display_step, -1, 5000)
         
-        self.nnm.setShuffleRate(2500)
-        self.nnm.initializeTraining(learning_rate, fitness_rate, batch_size, display_step)
         self.nnm.train()
         
         self.nnm.plot()
@@ -131,4 +127,6 @@ class COTONN:
 
 cotonn = COTONN()
 #cotonn.scoutLearningRateConvergence("controllers/vehicle/controller", 2, 256, 300, [0.01, 0.009, 0.008, 0.007, 0.006, 0.005, 0.004, 0.003], 500, 5000)
-cotonn.fullSetMLP("controllers/dcdc/controller", 2, 64, 0.01, 0.9, 0.995, 100, 1000)
+#cotonn.fullSetMLP("controllers/vehicle/controller_large", 2, 256, 0.01, 0.9, 0.995, 100, 1000)
+#cotonn.fullSetMLP("controllers/dcdc/controller", 2, 32, 0.01, 0.1, 0.995, 100, 1000)
+cotonn.fullSetMLP("controllers/dcdc/controller", 2, 32, 0.01, 0.05, 1.0, 100, 1000)
