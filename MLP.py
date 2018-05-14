@@ -45,6 +45,8 @@ class MLP:
         def getKeepProbability(self): return self.keep_prob_float
         def getActivationFunction(self): return self.activation_function
         
+        def getSession(self): return self.session
+        
         
         # Initialize network function which intializes an initial network with random weights and biases
         def initializeNetwork(self):
@@ -78,10 +80,7 @@ class MLP:
  
         # Initialize loss function
         def initializeLossFunction(self):
-            # big difference in learning rate between loss functions
-            #self.loss_function = tf.losses.sigmoid_cross_entropy(self.y, self.predictor)
             self.loss_function = tf.losses.log_loss(self.y, self.predictor)
-            #self.loss_function = tf.losses.mean_squared_error(self.y, self.predictor)
             
             return self.loss_function
         
