@@ -14,7 +14,7 @@ class MLP:
             # Network parameters
             self.layers = []
             self.num_layers = 0
-            self.keep_prob_float = 1.0
+            self.dropout_rate = 0.0
             self.activation_function = None
             
             # Neural network general variables (MLP)            
@@ -36,30 +36,32 @@ class MLP:
         def setNeurons(self, layers):
             self.num_layers = len(layers)
             self.layers = layers
-        def setKeepProbability(self, value): self.keep_prob_float = value
+        def setDropoutRate(self, value): self.dropout_rate = value
         def setActivationFunction(self, value): self.activation_function = value
       
         # Getters
         def getNumLayers(self): return self.num_layers
         def getLayers(self): return self.layers
-        def getKeepProbability(self): return self.keep_prob_float
+        def getDropoutRate(self): return self.dropout_rate
         def getActivationFunction(self): return self.activation_function
         
+        # tensorflow session functions
         def getSession(self): return self.session
+        def runInSession(self, fetch, x, y): return self.session.run(fetch, {self.x: x, self.y: y})
         
         
         # Initialize network function which intializes an initial network with random weights and biases
         def initializeNetwork(self):
             self.x = tf.placeholder(tf.float32, [None, self.layers[0]])
             self.y = tf.placeholder(tf.float32, [None, self.layers[-1]])
-            self.keep_prob = tf.placeholder(tf.float32)
+            self.dropout = tf.placeholder(tf.float32)
 
             layer = tf.layers.dense(inputs=self.x, units=self.layers[1], activation=self.activationFunction())
-            layer = tf.layers.dropout(inputs=layer, rate=self.keep_prob)
+            layer = tf.layers.dropout(inputs=layer, rate=self.dropout_rate)
 
             for i in range(1, self.num_layers - 1):
                 layer = tf.layers.dense(inputs=layer, units=self.layers[i+1], activation=self.activationFunction())
-                layer = tf.layers.dropout(inputs=layer, rate=self.keep_prob)
+                layer = tf.layers.dropout(inputs=layer, rate=self.dropout_rate)
 
             self.predictor = layer
 
@@ -115,13 +117,13 @@ class MLP:
         # Training step with a batch
         def trainStep(self, batch):
             # do one training step using the batch
-            self.session.run(self.train_function, {self.x: batch[0], self.y: batch[1], self.keep_prob: self.keep_prob_float})
-            return self.session.run(self.loss_function, {self.x: batch[0], self.y: batch[1], self.keep_prob: self.keep_prob_float})
+            self.session.run(self.train_function, {self.x: batch[0], self.y: batch[1], self.dropout: self.dropout_rate})
+            return self.session.run(self.loss_function, {self.x: batch[0], self.y: batch[1], self.dropout: self.dropout_rate})
             
         
         # Estimator function which estimates the desired outcome based on an input
         def estimate(self, x):
-            return self.session.run(self.predictor, {self.x: x, self.keep_prob: 1.0})
+            return self.session.run(self.predictor, {self.x: x, self.dropout: 0.0})
             
         
         # Save

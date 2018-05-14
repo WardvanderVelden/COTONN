@@ -9,6 +9,7 @@ import signal
 import time
 import matplotlib.pyplot as plt
 import random
+import tensorflow as tf
 
 class NNTypes(Enum):
       MLP = 1
@@ -39,7 +40,7 @@ class NeuralNetworkManager:
         self.type = None
         self.training_method = None
         self.activation_function = None
-        self.keep_prob = 1.0
+        self.dropout_rate = 0.0
         
         self.training = True
         self.learning_rate = 0.1
@@ -73,7 +74,7 @@ class NeuralNetworkManager:
     def getDisplayStep(self): return self.display_step
     def getEpoch(self): return self.epoch
     def getEpochThreshold(self): return self.epoch_threshold
-    def getKeepProbability(self): return self.keep_prob
+    def getDropoutRate(self): return self.dropout_rate
     def getShuffleRate(self): return self.shuffle_rate
     
     def setType(self, type): self.type = type
@@ -84,7 +85,7 @@ class NeuralNetworkManager:
     def setBatchSize(self, value): self.batch_size = value
     def setDisplayStep(self, value): self.display_step = value
     def setEpochThreshold(self, keep_probability): self.epoch_threshold = keep_probability
-    def setKeepProbability(self, value): self.keep_prob = value
+    def setDropoutRate(self, value): self.dropout_rate = value
     def setShuffleRate(self, value): self.shuffle_rate = value
 
     def setDataSet(self, data_set): self.data_set = data_set
@@ -133,26 +134,46 @@ class NeuralNetworkManager:
             
         # Initialize network and loss function
         self.nn.setNeurons(self.layers)
-        self.nn.setKeepProbability(self.keep_prob)
+        self.nn.setDropoutRate(self.dropout_rate)
         self.nn.setActivationFunction(self.activation_function)
         self.nn.initializeNetwork()
         
         # Print neural network status
         if(self.debug_mode):
-            print("Generated network neuron topology: " + str(self.layers) + " with keep probability: " + str(self.nn.getKeepProbability()))
+            print("Generated network neuron topology: " + str(self.layers) + " with dropout rate: " + str(self.nn.getDropoutRate()))
         
         
     # Initialize training function
-    def initializeTraining(self, learning_rate, fitness_threshold, batch_size, display_step, epoch_threshold = -1):      
+    def initializeTraining(self, learning_rate, fitness_threshold, batch_size, display_step, epoch_threshold = -1, shuffle_rate = 10000):      
         self.learning_rate = learning_rate
         self.fitness_threshold = fitness_threshold
         self.batch_size = batch_size
         self.display_step = display_step
         self.epoch_threshold = epoch_threshold
-        self.shuffle_rate = 10000
+        self.shuffle_rate = shuffle_rate
         
         self.nn.initializeLossFunction()
         self.nn.initializeTrainFunction(self.training_method, self.learning_rate)
+        
+        
+    # Initialize fitness function
+    def initializeFitnessFunction(self):
+        eta = self.data_set.getYEta()
+        size = self.data_set.getSize()
+        
+        lower_bound = tf.subtract(self.nn.y, eta)
+        upper_bound = tf.add(self.nn.y, eta)
+        
+        is_fit = tf.logical_and(tf.greater_equal(self.nn.predictor, lower_bound), tf.less(self.nn.predictor, upper_bound))
+        non_zero = tf.to_float(tf.count_nonzero(is_fit))
+        self.fitness = non_zero/size
+        
+        
+    # General initialization function to call all functions
+    def initialize(self, learning_rate, fitness_threshold, batch_size, display_step, epoch_threshold = -1, shuffle_rate = 10000):
+        self.initializeNeuralNetwork()
+        self.initializeFitnessFunction()
+        self.initializeTraining(learning_rate, fitness_threshold, batch_size, display_step, epoch_threshold, shuffle_rate)
         
         
     # Check a state against the dataset and nn by using its id in the dataset
@@ -228,7 +249,7 @@ class NeuralNetworkManager:
             if(i % self.shuffle_rate == 0 and i != 0): self.data_set.shuffle()
             
             if(i % self.display_step == 0 and i != 0):
-                fit = self.checkFitness()
+                fit = self.nn.runInSession(self.fitness, self.data_set.x, self.data_set.y)
                 self.addToLog(loss, fit, i)
                 print("i = " + str(i) + "\tepoch = " + str(self.epoch) + "\tloss = " + str(float("{0:.3f}".format(loss))) + "\tfit = " + str(float("{0:.3f}".format(fit))))
                 
