@@ -1,5 +1,9 @@
 import tensorflow as tf
+import os
 import NeuralNetworkManager
+
+# Disable session clear debug log
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
 # The MLP class as presented in this file is a bare bone object oriented approach to creating an MLP
 # for the purpose of capturing the behaviour of a static controller (table). 
@@ -10,122 +14,133 @@ class MLP:
             # Network parameters
             self.layers = []
             self.num_layers = 0
-            self.keep_prob = 1
+            self.keep_prob_float = 1.0
+            self.activation_function = None
             
-            # Neural network general variables (MLP)
-            self.s = None 
-            self.u = None
-            
+            # Neural network general variables (MLP)            
             self.weights = []
             self.biases = []
             
-            self.network = None 
+            self.predictor = None
             
             # Neural network training variables
-            self.squared_delta = None
             self.loss_function = None
             self.train_function = None
-            self.keep_prob = 1
             
             # Tensorflow specific
+            tf.reset_default_graph()
             self.session = tf.Session()
-            #self.saver = tf.train.Saver()
+            self.saver = None
+            
+            self.tensorboard_log_path = './tmp/log'
+            "--> tensorboard --logdir=log "
             
         # Setters
         def setDebugMode(self, value): self.debug_mode = value
         def setNeurons(self, layers):
             self.num_layers = len(layers)
             self.layers = layers
-        def setKeepProbability(self, value): self.keep_prob = value
+        def setKeepProbability(self, value): self.keep_prob_float = value
+        def setActivationFunction(self, value): self.activation_function = value
       
         # Getters
         def getNumLayers(self): return self.num_layers
         def getLayers(self): return self.layers
-        def getKeepProbability(self): return self.keep_prob
+        def getKeepProbability(self): return self.keep_prob_float
+        def getActivationFunction(self): return self.activation_function
         
         
         # Initialize network function which intializes an initial network with random weights and biases
-        def initializeNetwork(self):
-            # Initialize tensors
-            self.x = tf.placeholder(tf.float32, [None, self.layers[0]])
-            self.y = tf.placeholder(tf.float32, [None, self.layers[-1]])
-            
-            self.weights = [None]*(self.num_layers - 1)
-            self.biases = [None]*(self.num_layers - 1)
-            
-            for i in range(self.num_layers - 1):
-                self.weights[i] = tf.Variable(tf.random_normal([self.layers[i], self.layers[i+1]]),tf.float32)
-                self.biases[i]= tf.Variable(tf.random_normal([self.layers[i+1]]),tf.float32)
+        def initializeNetwork(self, nnm):
+            self.x = tf.placeholder(tf.float32, [None, self.layers[0]], name='InputStates')
+            self.y = tf.placeholder(tf.float32, [None, self.layers[-1]], name='InputLabels')
+            self.keep_prob = tf.placeholder(tf.float32, name='Keep_Prob')
 
-            # Define network
-            tf_layers = [None]*(self.num_layers - 1)   
-            tf_layers[0] = tf.add(tf.matmul(self.x, self.weights[0]), self.biases[0]) # input layer
-            tf_layers[0] = self.activationFunction(tf_layers[0])
-            tf_layers[0] = tf.nn.dropout(tf_layers[0], self.keep_prob)
-            
-            for i in range(1, self.num_layers - 1):
-                tf_layers[i] = tf.add(tf.matmul(tf_layers[i-1], self.weights[i]), self.biases[i])
-                tf_layers[i] = self.activationFunction(tf_layers[i])
-                tf_layers[i] = tf.nn.dropout(tf_layers[i], self.keep_prob)
- 
-            self.network = tf_layers[-1]
-            
+            with tf.name_scope('Input_Layer'):
+                  layer = tf.layers.dense(inputs=self.x, units=self.layers[1], activation=self.activationFunction())
+                  layer = tf.layers.dropout(inputs=layer, rate=self.keep_prob)
+
+            with tf.name_scope('Hidden_Layers_'):
+                  for i in range(1, self.num_layers - 1):
+                      layer = tf.layers.dense(inputs=layer, units=self.layers[i+1], activation=self.activationFunction())
+                      layer = tf.layers.dropout(inputs=layer, rate=self.keep_prob)
+
+            with tf.name_scope('Predictor'):
+                  self.predictor = layer
+
+            self.merged = tf.summary.merge_all() # This argument can not be None, as it will result in an error.
             self.session.run(tf.global_variables_initializer())
-            
-            return self.network
+            self.saver = tf.train.Saver()
+            return self.predictor
         
-        def activationFunction(self, layer):
-              if NeuralNetworkManager.NNActivationFunction == 1:
-                    layer = tf.sigmoid(layer)
-              if NeuralNetworkManager.NNActivationFunction == 2:
-                    layer = tf.relu(layer)
-              if NeuralNetworkManager.NNActivationFunction == 3:
-                    layer = tf.tanh(layer)
-              else: layer = tf.sigmoid(layer)
-              return layer
+        
+        # Activation function
+        def activationFunction(self):
+            with tf.name_scope('Activation'):
+                  if self.activation_function == NeuralNetworkManager.NNActivationFunction.Sigmoid:
+                      return tf.sigmoid
+                  if self.activation_function == NeuralNetworkManager.NNActivationFunction.Relu:
+                      return tf.nn.relu
+                  if self.activation_function == NeuralNetworkManager.NNActivationFunction.tanh:
+                      return tf.tanh
+                  else: 
+                      return tf.sigmoid
  
         # Initialize loss function
         def initializeLossFunction(self):
-            self.squared_delta = tf.square(self.network - self.y)
-            self.loss_function = tf.reduce_sum(self.squared_delta)
-            
+            with tf.name_scope('Loss_Function'):
+                  # big difference in learning rate between loss functions
+                  #self.loss_function = tf.losses.sigmoid_cross_entropy(self.y, self.predictor)
+                  self.loss_function = tf.losses.log_loss(self.y, self.predictor)
+                  #self.loss_function = tf.losses.mean_squared_error(self.y, self.predictor)
             return self.loss_function
         
         
         # Intialize training function
         def initializeTrainFunction(self, function, learning_rate):
-            if(function == NeuralNetworkManager.NNOptimizer.Gradient_Descent):
-                self.train_function = tf.train.GradientDescentOptimizer(learning_rate).minimize(self.loss_function)
-                print("Training method: Gradient Descent")
-            elif(function == NeuralNetworkManager.NNOptimizer.Adadelta):
-                self.train_function = tf.train.AdadeltaOptimizer(learning_rate).minimize(self.loss_function)
-                print("Training method: AdaDelta")
-            elif(function == NeuralNetworkManager.NNOptimizer.Adagrad):
-                self.train_function = tf.train.AdagradOptimizer(learning_rate).minimize(self.loss_function)
-                print("Training method: Adagrad")
-            elif(function == NeuralNetworkManager.NNOptimizer.Adam):
-                self.train_function = tf.train.AdamOptimizer(learning_rate).minimize(self.loss_function)
-                print("Training method: Adam")
-            else:
-                self.train_function = tf.train.GradientDescentOptimizer(learning_rate).minimize(self.loss_function)
-                print("Training method: Gradient Descent")
-     
-            self.session.run(tf.global_variables_initializer())
-            #Exporter.saveNetwork(self.session, "/log/log.ckpt")
+            with tf.name_scope('Optimizer'):
+                  if(function == NeuralNetworkManager.NNOptimizer.Gradient_Descent):
+                      self.train_function = tf.train.GradientDescentOptimizer(learning_rate).minimize(self.loss_function)
+                      if(self.debug_mode):
+                          print("Training method: Gradient Descent")
+                  elif(function == NeuralNetworkManager.NNOptimizer.Adadelta):
+                      self.train_function = tf.train.AdadeltaOptimizer(learning_rate).minimize(self.loss_function)
+                      if(self.debug_mode):
+                          print("Training method: AdaDelta")
+                  elif(function == NeuralNetworkManager.NNOptimizer.Adagrad):
+                      self.train_function = tf.train.AdagradOptimizer(learning_rate).minimize(self.loss_function)
+                      if(self.debug_mode):
+                          print("Training method: AdaGrad")
+                  elif(function == NeuralNetworkManager.NNOptimizer.Adam):
+                      self.train_function = tf.train.AdamOptimizer(learning_rate).minimize(self.loss_function)
+                      if(self.debug_mode):
+                          print("Training method: Adam")
+                  else:
+                      self.train_function = tf.train.GradientDescentOptimizer(learning_rate).minimize(self.loss_function)
+                      if(self.debug_mode):
+                          print("Training method: Gradient Descent")
+           
+                  self.session.run(tf.global_variables_initializer())
             return self.train_function
         
         
         # Training step with a batch
-        def trainStep(self, batch):
-            # do one training step using the batch
-            self.session.run(self.train_function, {self.x: batch[0], self.y: batch[1]})
-            return self.session.run(self.loss_function, {self.x: batch[0], self.y: batch[1]})
+        def trainStep(self, batch, merged_summary):
+            with tf.name_scope('TRAIN'):
+                  # do one training step using the batch
+                  self.session.run(self.train_function, {self.x: batch[0], self.y: batch[1], self.keep_prob: self.keep_prob_float})
+                  self.summary_result = self.session.run(merged_summary, {self.x: batch[0], self.y: batch[1]})
+            return self.session.run(self.loss_function, {self.x: batch[0], self.y: batch[1], self.keep_prob: self.keep_prob_float}), self.summary_result
             
         
         # Estimator function which estimates the desired outcome based on an input
         def estimate(self, x):
-            return self.session.run(self.network, {self.x: x})
+            return self.session.run(self.predictor, {self.x: x, self.keep_prob: 1.0})
             
+        
+        # Save
+        def save(self, filename):
+            self.saver.save(self.session, filename)
         
         # Close function which closes tensorflow session
         def close(self):

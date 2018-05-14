@@ -29,7 +29,7 @@ class COTONN:
         print("COTONN v0.2.3")
         
         # read static controller
-        filename = "controllers/test/controller" # for smaller network use simple
+        filename = "controllers/dcdc/controller" # for smaller network use simple
         self.staticController = self.importer.readStaticController(filename)
         
         # define dataset
