@@ -68,6 +68,10 @@ class StaticController:
     # Get the size of the controller
     def getSize(self):
         return self.state_size
+    
+    # Get index of value
+    def getIndexOfState(self, state):
+        return self.states.index(state)
         
     # Setters
     def setStateSpaceDim(self, value): self.state_space_dim = value

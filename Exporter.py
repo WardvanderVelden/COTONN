@@ -1,15 +1,14 @@
-import tensorflow as tf
+#import tensorflow as tf
 
 import time
 
 """General info on saving: http://cv-tricks.com/tensorflow-tutorial/save-restore-tensorflow-models-quick-complete-tutorial/  """
 
+# Exporter class responsible for exporting to files
 class Exporter:
-      
       def __init__(self):
             self.save_location = ('./tmp/saves/model'
       
-      #def getsave(self) return self.save_function
       
       def saveNetwork(self, session, path):
             # Create a saver
