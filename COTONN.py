@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 # Main class from which all functions are called
 class COTONN:
     def __init__(self):
-        print("COTONN v0.4.2\n")
+        print("COTONN v0.5.0\n")
         
         self.importer = Importer()
         self.exporter = Exporter()
@@ -59,7 +59,7 @@ class COTONN:
 
         self.nnm.randomCheck(fullSet)
 
-        #self.exporter.saveNetwork(self.nnm, "./nn/model.ckpt")
+        self.exporter.saveNetwork(self.nnm.nn.session, "./nn/model.ckpt")
         
         self.nnm.close()
         

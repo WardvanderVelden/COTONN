@@ -1,0 +1,9 @@
+
+*.pyc
+tmp/log/events.out.tfevents.1526308209.MSI
+*.MSI
+Convolution.py
+*.meta
+tmp/saves/checkpoint
+tmp/saves/model_.data-00000-of-00001
+tmp/saves/model_.index

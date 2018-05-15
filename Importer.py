@@ -1,5 +1,6 @@
 from StaticController import StaticController
 import numpy as np
+import tensorflow as tf
 
 # Importer class which will be responsible for reading in controller files and formatting them 
 # such that they can be read into PlainControllers or BddControllers and used as neural network
@@ -94,3 +95,28 @@ class Importer:
             dim_right = self.raw_str.index(right)
             line = self.raw_str[dim_left:dim_right]
             return line
+      
+      def restoreNetwork(self, meta_path, session):
+            self.saver = tf.train.import_meta_graph(meta_path) # input filename meta graph -> model_name.meta
+            self.saver.restore(session, tf.train.latest_checkpoint('./'))
+            return self.saver
+            
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      

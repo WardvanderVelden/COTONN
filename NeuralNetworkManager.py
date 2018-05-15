@@ -1,15 +1,17 @@
 #import tensorflow as tf
 from BinaryEncoderDecoder import BinaryEncoderDecoder
+from Exporter import Exporter
 from MLP import MLP
 from enum import Enum
 
+import tensorflow as tf
 import math
 import numpy
 import signal
 import time
 import matplotlib.pyplot as plt
 import random
-import tensorflow as tf
+
 
 class NNTypes(Enum):
       MLP = 1
@@ -32,7 +34,7 @@ class NNActivationFunction(Enum):
       Relu = 2
       tanh = 3
 
-
+      
 # Class which will handle all the work done on neural networks and will contain all the functions which
 # are called in tensorflow in order to generate neural networks from the controllers.
 class NeuralNetworkManager:
@@ -64,6 +66,12 @@ class NeuralNetworkManager:
         self.fitnesses = []
         self.iterations = []
         
+        self.save_location = './tmp/saves/model_'+ str(time.time())
+        self.save_function = None
+        
+        self.tensorboard_log_path = './tmp/log/test'
+        
+
     # Getters and setters
     def getType(self): return self.type
     def getTrainingMethod(self): return self.training_method
@@ -76,6 +84,7 @@ class NeuralNetworkManager:
     def getEpochThreshold(self): return self.epoch_threshold
     def getDropoutRate(self): return self.dropout_rate
     def getShuffleRate(self): return self.shuffle_rate
+    def getSaveLocation(self): return self.save_location
     
     def setType(self, type): self.type = type
     def setTrainingMethod(self, optimizer): self.training_method = optimizer
@@ -87,9 +96,8 @@ class NeuralNetworkManager:
     def setEpochThreshold(self, keep_probability): self.epoch_threshold = keep_probability
     def setDropoutRate(self, value): self.dropout_rate = value
     def setShuffleRate(self, value): self.shuffle_rate = value
-
+    def setSaveLocation(self, value): self.save_location = value
     def setDataSet(self, data_set): self.data_set = data_set
-    
     def setDebugMode(self, value): self.debug_mode = value
     
     
@@ -137,6 +145,7 @@ class NeuralNetworkManager:
         self.nn.setDropoutRate(self.dropout_rate)
         self.nn.setActivationFunction(self.activation_function)
         self.nn.initializeNetwork()
+        self.train_writer = tf.summary.FileWriter(self.tensorboard_log_path, self.nn.session.graph)
         
         # Print neural network status
         if(self.debug_mode):
@@ -217,18 +226,22 @@ class NeuralNetworkManager:
         signal.signal(signal.SIGINT, self.interrupt)
 
         i, batch_index, loss, fit = 0,0,0,0.0
+
+        self.merged_summary = tf.summary.merge_all()
         
         start_time = time.time()
         while self.training:
             batch = self.data_set.getBatch(self.batch_size, batch_index)
-            loss = self.nn.trainStep(batch)
+            loss, summary = self.nn.trainStep(batch, self.merged_summary)
             
             if(i % self.shuffle_rate == 0 and i != 0): self.data_set.shuffle()
             
             if(i % self.display_step == 0 and i != 0):
                 fit = self.nn.runInSession(self.fitness, self.data_set.x, self.data_set.y)
+                
                 self.addToLog(loss, fit, i)
                 print("i = " + str(i) + "\tepoch = " + str(self.epoch) + "\tloss = " + str(float("{0:.3f}".format(loss))) + "\tfit = " + str(float("{0:.3f}".format(fit))))
+                self.train_writer.add_summary(summary, i)
                 
             if(self.epoch >= self.epoch_threshold and self.epoch_threshold > 0):
                 print("i = " + str(i) + "\tepoch = " + str(self.epoch) + "\tloss = " + str(float("{0:.3f}".format(loss))) + "\tfit = " + str(float("{0:.3f}".format(fit))))
@@ -248,6 +261,7 @@ class NeuralNetworkManager:
             if(batch_index >= self.data_set.getSize()): 
                 batch_index = batch_index % self.data_set.getSize()
                 self.epoch += 1
+            
             i += 1
         
         end_time = time.time()
@@ -308,14 +322,9 @@ class NeuralNetworkManager:
         print("\nSaving neural network")
         self.nn.save(filename)
     
-    
+
     # Close session
     def close(self):
         self.nn.close()
-        
-            
-
-        
- 
-
+        self.train_writer.close()
         
