@@ -3,7 +3,7 @@ import os
 import NeuralNetworkManager
 
 # Disable session clear debug log
-#os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
 # The MLP class as presented in this file is a bare bone object oriented approach to creating an MLP
 # for the purpose of capturing the behaviour of a static controller (table). 
@@ -30,9 +30,8 @@ class MLP:
             # Tensorflow specific
             tf.reset_default_graph()
             self.session = tf.Session()
-            self.saver = None
             
-            #self.tensorboard_log_path = './tmp/log/test'
+            self.tensorboard_log_path = './tmp/log/test'
             "--> tensorboard --logdir=studie/wb 3e jaar/bep/cotonn/tmp/log/test "
             
         # Setters
@@ -71,7 +70,6 @@ class MLP:
 
             self.merged = tf.summary.merge_all() # This argument can not be None, as it will result in an error.
             self.session.run(tf.global_variables_initializer())
-            self.saver = tf.train.Saver()
             return self.predictor
         
         
@@ -128,11 +126,8 @@ class MLP:
         # Training step with a batch
         def trainStep(self, batch, merged_summary):
             with tf.name_scope('TRAIN'):
-                  acc, summary, loss = self.session.run([self.train_function, merged_summary, self.loss_function],  {self.x: batch[0], self.y: batch[1], self.keep_prob: self.keep_prob_float})  
-            
-                  # do one training step using the batch
-                  #self.session.run(self.train_function, {self.x: batch[0], self.y: batch[1], self.keep_prob: self.keep_prob_float})
-                  #self.summary_result = self.session.run(merged_summary, {self.x: batch[0], self.y: batch[1], self.keep_prob: self.keep_prob_float})
+                  acc, summary, loss = self.session.run([self.train_function, merged_summary, self.loss_function],  
+                                                        {self.x: batch[0], self.y: batch[1], self.keep_prob: self.keep_prob_float})  
             return loss, summary
             
         
@@ -140,11 +135,7 @@ class MLP:
         def estimate(self, x):
             return self.session.run(self.predictor, {self.x: x, self.keep_prob: 1.0})
             
-        
-        # Save
-        def save(self, filename):
-            self.saver.save(self.session, filename)
-        
+  
         # Close function which closes tensorflow session
         def close(self):
             self.session.close()

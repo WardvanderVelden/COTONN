@@ -53,9 +53,9 @@ class COTONN:
         for i in range(10):
             r = round(random.random()*(self.dataSet.getSize()-1))
             self.nnm.checkByIndex(r, True)
+            
+        self.exporter.saveNetwork(self.nnm.nn.session, './tmp/saves/model_')
         
-        # save nn
-        #self.exporter.saveNetwork(self.nnm, "/log/model.ckpt")
         self.nnm.close()
         
     def testShuffle(self):

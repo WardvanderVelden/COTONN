@@ -1,5 +1,6 @@
 #import tensorflow as tf
 from BinaryEncoderDecoder import BinaryEncoderDecoder
+from Exporter import Exporter
 from MLP import MLP
 from enum import Enum
 
@@ -31,8 +32,7 @@ class NNActivationFunction(Enum):
       Sigmoid = 1
       Relu = 2
       tanh = 3
-
-
+      
 # Class which will handle all the work done on neural networks and will contain all the functions which
 # are called in tensorflow in order to generate neural networks from the controllers.
 class NeuralNetworkManager:
@@ -65,7 +65,10 @@ class NeuralNetworkManager:
         self.fitnesses = []
         self.iterations = []
         
-        self.tensorboard_log_path = '/tmp'
+        self.save_location = './tmp/saves/model_'+ str(time.time())
+        self.save_function = None
+        
+        self.tensorboard_log_path = './tmp/log/test'
         "--> tensorboard --logdir=studie/wb 3e jaar/bep/cotonn/tmp/log/test "
         
         
@@ -81,6 +84,7 @@ class NeuralNetworkManager:
     def getEpochThreshold(self): return self.epoch_threshold
     def getKeepProbability(self): return self.keep_prob
     def getShuffleRate(self): return self.shuffle_rate
+    def getSaveLocation(self): return self.save_location
     
     def setType(self, type): self.type = type
     def setTrainingMethod(self, optimizer): self.training_method = optimizer
@@ -92,6 +96,7 @@ class NeuralNetworkManager:
     def setEpochThreshold(self, keep_probability): self.epoch_threshold = keep_probability
     def setKeepProbability(self, value): self.keep_prob = value
     def setShuffleRate(self, value): self.shuffle_rate = value
+    def setSaveLocation(self, value): self.save_location = value
 
     def setDataSet(self, data_set): self.data_set = data_set
     
@@ -142,12 +147,13 @@ class NeuralNetworkManager:
         self.nn.setKeepProbability(self.keep_prob)
         self.nn.setActivationFunction(self.activation_function)
         self.nn.initializeNetwork(self)
+        self.train_writer = tf.summary.FileWriter(self.tensorboard_log_path, self.nn.session.graph)
         
         
         # Print neural network status
         if(self.debug_mode):
             print("Generated network neuron topology: " + str(self.layers) + " with keep probability: " + str(self.nn.getKeepProbability()))
-        return 
+        return self.train_writer
         
     # Initialize training function
     def initializeTraining(self, learning_rate, fitness_threshold, batch_size, display_step, shuffle_rate = 500, epoch_threshold = -1):
@@ -169,11 +175,10 @@ class NeuralNetworkManager:
         self.nn.initializeLossFunction()
         self.nn.initializeTrainFunction(self.training_method, self.learning_rate)
         
-        # Tensorboard
-        self.train_writer = tf.summary.FileWriter(self.tensorboard_log_path, self.nn.session.graph)
+        # Tensorboard  
         #self.merged_summary = tf.summary.merge_all()
-        tf.global_variables_initializer()
-        return self.train_writer
+        #tf.global_variables_initializer()
+        return #self.train_writer
         
     # Check a state against the dataset and nn by using its id in the dataset
     def checkByIndex(self, index, out):
@@ -278,13 +283,12 @@ class NeuralNetworkManager:
             if(batch_index >= self.data_set.getSize()): 
                 batch_index = batch_index % self.data_set.getSize()
                 self.epoch += 1
-            self.merged_summary = tf.summary.merge_all()
-            self.train_writer.add_summary(summary, i)
+            #self.merged_summary = tf.summary.merge_all()
+            #self.train_writer.add_summary(summary, i)
             
             i += 1
         
-        #self.train_writer.add_graph(self, self.nn.session.graph_def)
-        self.train_writer.close()
+        #self.train_writer.close()
         end_time = time.time()
         print("Time taken: " + self.formatTime(end_time - start_time))
         
@@ -337,20 +341,9 @@ class NeuralNetworkManager:
         self.fitnesses = []
         self.iterations = []
         self.losses = []
-        
-    # Save network
-    def save(self, filename):
-        print("\nSaving neural network")
-        self.nn.save(filename)
-    
-    
+  
+
     # Close session
     def close(self):
         self.nn.close()
-        
-            
-
-        
- 
-
         
