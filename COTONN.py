@@ -142,5 +142,5 @@ class COTONN:
 
 cotonn = COTONN()
 #cotonn.scoutLearningRateConvergence("controllers/vehicle/controller", 2, 256, 300, [0.01, 0.009, 0.008, 0.007, 0.006, 0.005, 0.004, 0.003], 500, 5000)
-cotonn.fullSetMLP("controllers/dcdc/simple", 2, 2**4, 0.01, 0.05, 1.0, 100, 1000)
+cotonn.fullSetMLP("controllers/dcdc/controller", 2, 2**5, 0.01, 0.05, 0.95, 100, 100)
 #cotonn.subSetMLP("controllers/vehicle/controller", 0.1, 2, 32, 0.01, 0.05, 0.9, 100, 1000)

@@ -86,6 +86,7 @@ class MLP:
         # Initialize loss function
         def initializeLossFunction(self):
             self.loss_function = tf.losses.log_loss(self.y, self.predictor)
+            tf.summary.scalar("loss", self.loss_function)
             
             return self.loss_function
         
@@ -123,8 +124,8 @@ class MLP:
             #with tf.name_scope('Train'):
                 #acc, summary, loss = self.session.run([self.train_function, merged_summary, self.loss_function], {self.x: batch[0], self.y: batch[1], self.dropout: self.dropout_rate})  
             #return loss, summary
-            train, loss = self.session.run([self.train_function, self.loss_function], {self.x: batch[0], self.y: batch[1], self.dropout: self.dropout_rate})
-            return loss
+            train, summary, loss = self.session.run([self.train_function, merged_summary, self.loss_function], {self.x: batch[0], self.y: batch[1], self.dropout: self.dropout_rate})
+            return loss, summary
             
         
         # Estimator function which estimates the desired outcome based on an input

@@ -173,6 +173,8 @@ class NeuralNetworkManager:
             is_fit = tf.logical_and(tf.greater_equal(self.nn.predictor, lower_bound), tf.less(self.nn.predictor, upper_bound))
             non_zero = tf.to_float(tf.count_nonzero(tf.reduce_min(tf.cast(is_fit, tf.int8), 1)))
             self.fitness = non_zero/size
+            
+            tf.summary.scalar("Fitness", self.fitness)
         
         
     # General initialization function to call all functions
@@ -231,8 +233,7 @@ class NeuralNetworkManager:
         start_time = time.time()
         while self.training:
             batch = self.data_set.getBatch(self.batch_size, batch_index)
-            #loss, summary = self.nn.trainStep(batch, self.merged_summary)
-            loss = self.nn.trainStep(batch, self.merged_summary)
+            loss, summary = self.nn.trainStep(batch, self.merged_summary)
             
             if(i % self.shuffle_rate == 0 and i != 0): self.data_set.shuffle()
             
@@ -241,7 +242,7 @@ class NeuralNetworkManager:
                 
                 self.addToLog(loss, fit, i)
                 print("i = " + str(i) + "\tepoch = " + str(self.epoch) + "\tloss = " + str(float("{0:.3f}".format(loss))) + "\tfit = " + str(float("{0:.3f}".format(fit))))
-                #self.train_writer.add_summary(summary, i)
+                self.train_writer.add_summary(summary, i)
                 
             if(self.epoch >= self.epoch_threshold and self.epoch_threshold > 0):
                 print("i = " + str(i) + "\tepoch = " + str(self.epoch) + "\tloss = " + str(float("{0:.3f}".format(loss))) + "\tfit = " + str(float("{0:.3f}".format(fit))))
