@@ -24,6 +24,15 @@ class COTONN:
         
         self.importer.setDebugMode(False)
         self.nnm.setDebugMode(self.debug_mode)
+        
+    
+    # Clean memory function
+    def cleanMemory(self):
+        del self.nnm.nn
+        del self.nnm
+        del self.staticController
+        del self.exporter
+        del self.importer
 
 
     # Generate MLP from fullset
@@ -53,6 +62,8 @@ class COTONN:
         #self.exporter.saveNetwork(self.nnm, "./nn/model.ckpt")
         
         self.nnm.close()
+        
+        self.cleanMemory()
 
     # Generate MLP from subset
     def subSetMLP(self, filename, percentage, layer_width, layer_height, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step):
@@ -85,6 +96,8 @@ class COTONN:
         #self.exporter.saveNetwork(self.nnm, "./nn/model.ckpt")
         
         self.nnm.close()
+        
+        self.cleanMemory()
 
 
     # Scout learningrate convergence
@@ -124,9 +137,10 @@ class COTONN:
         (x1,x2,y1,y2) = plt.axis()
         plt.axis((min(rates),max(rates),0.0,y2+0.1))
         plt.show()
+        
+        self.cleanMemory()
 
 cotonn = COTONN()
 #cotonn.scoutLearningRateConvergence("controllers/vehicle/controller", 2, 256, 300, [0.01, 0.009, 0.008, 0.007, 0.006, 0.005, 0.004, 0.003], 500, 5000)
-#cotonn.fullSetMLP("controllers/vehicle/controller_large", 2, 256, 0.01, 0.9, 0.995, 100, 1000)
-#cotonn.fullSetMLP("controllers/dcdc/controller", 2, 32, 0.01, 0.1, 0.995, 100, 1000)
-cotonn.fullSetMLP("controllers/dcdc/controller", 2, 32, 0.01, 0.05, 1.0, 100, 1000)
+cotonn.fullSetMLP("controllers/dcdc/simple", 2, 2**4, 0.01, 0.05, 1.0, 100, 1000)
+#cotonn.subSetMLP("controllers/vehicle/controller", 0.1, 2, 32, 0.01, 0.05, 0.9, 100, 1000)
