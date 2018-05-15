@@ -29,7 +29,7 @@ class COTONN:
         print("COTONN v0.2.3")
         
         # read static controller
-        filename = "controllers/dcdc/controller" # for smaller network use simple
+        filename = "controllers/dcdc/simple" # for smaller network use simple
         self.staticController = self.importer.readStaticController(filename)
         
         # define dataset
@@ -45,7 +45,7 @@ class COTONN:
         self.nnm.initializeNeuralNetwork(0.99)
         
         # training
-        self.nnm.initializeTraining(0.05, 0.90, 250, 1000, 500)
+        self.nnm.initializeTraining(0.05, 0.85, 250, 1000, 500)
         self.nnm.train()
         
         # validate by randomly picking inputs
@@ -56,12 +56,10 @@ class COTONN:
         
         # save nn
         #self.exporter.saveNetwork(self.nnm, "/log/model.ckpt")
-        
-        # close session
         self.nnm.close()
         
     def testShuffle(self):
-        filename = "controllers/dcdc/simple" # for smaller network use simple
+        filename = "controllers/dcdc/controller" # for smaller network use simple
         self.staticController = self.importer.readStaticController(filename)
         
         self.dataSet.readSetFromController(self.staticController)

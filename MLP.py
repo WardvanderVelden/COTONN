@@ -3,7 +3,7 @@ import os
 import NeuralNetworkManager
 
 # Disable session clear debug log
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+#os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
 # The MLP class as presented in this file is a bare bone object oriented approach to creating an MLP
 # for the purpose of capturing the behaviour of a static controller (table). 
@@ -32,8 +32,8 @@ class MLP:
             self.session = tf.Session()
             self.saver = None
             
-            self.tensorboard_log_path = './tmp/log'
-            "--> tensorboard --logdir=log "
+            #self.tensorboard_log_path = './tmp/log/test'
+            "--> tensorboard --logdir=studie/wb 3e jaar/bep/cotonn/tmp/log/test "
             
         # Setters
         def setDebugMode(self, value): self.debug_mode = value
@@ -52,9 +52,10 @@ class MLP:
         
         # Initialize network function which intializes an initial network with random weights and biases
         def initializeNetwork(self, nnm):
-            self.x = tf.placeholder(tf.float32, [None, self.layers[0]], name='InputStates')
-            self.y = tf.placeholder(tf.float32, [None, self.layers[-1]], name='InputLabels')
-            self.keep_prob = tf.placeholder(tf.float32, name='Keep_Prob')
+            with tf.name_scope('Input'):
+                  self.x = tf.placeholder(tf.float32, [None, self.layers[0]], name='InputStates')
+                  self.y = tf.placeholder(tf.float32, [None, self.layers[-1]], name='InputLabels')
+                  self.keep_prob = tf.placeholder(tf.float32, name='Keep_Prob')
 
             with tf.name_scope('Input_Layer'):
                   layer = tf.layers.dense(inputs=self.x, units=self.layers[1], activation=self.activationFunction())
@@ -127,10 +128,12 @@ class MLP:
         # Training step with a batch
         def trainStep(self, batch, merged_summary):
             with tf.name_scope('TRAIN'):
+                  acc, summary, loss = self.session.run([self.train_function, merged_summary, self.loss_function],  {self.x: batch[0], self.y: batch[1], self.keep_prob: self.keep_prob_float})  
+            
                   # do one training step using the batch
-                  self.session.run(self.train_function, {self.x: batch[0], self.y: batch[1], self.keep_prob: self.keep_prob_float})
-                  self.summary_result = self.session.run(merged_summary, {self.x: batch[0], self.y: batch[1]})
-            return self.session.run(self.loss_function, {self.x: batch[0], self.y: batch[1], self.keep_prob: self.keep_prob_float}), self.summary_result
+                  #self.session.run(self.train_function, {self.x: batch[0], self.y: batch[1], self.keep_prob: self.keep_prob_float})
+                  #self.summary_result = self.session.run(merged_summary, {self.x: batch[0], self.y: batch[1], self.keep_prob: self.keep_prob_float})
+            return loss, summary
             
         
         # Estimator function which estimates the desired outcome based on an input

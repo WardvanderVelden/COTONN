@@ -61,12 +61,13 @@ class NeuralNetworkManager:
         
         # Plotting variables
         self.losses = []
-        tf.summary.scalar('Loss', self.losses)
+        #tf.summary.scalar('Loss', self.losses)
         self.fitnesses = []
         self.iterations = []
         
-        self.tensorboard_log_path = './tmp/log'
-        "--> tensorboard --logdir=log "
+        self.tensorboard_log_path = '/tmp'
+        "--> tensorboard --logdir=studie/wb 3e jaar/bep/cotonn/tmp/log/test "
+        
         
     # Getters and setters
     def getType(self): return self.type
@@ -142,10 +143,11 @@ class NeuralNetworkManager:
         self.nn.setActivationFunction(self.activation_function)
         self.nn.initializeNetwork(self)
         
+        
         # Print neural network status
         if(self.debug_mode):
             print("Generated network neuron topology: " + str(self.layers) + " with keep probability: " + str(self.nn.getKeepProbability()))
-        
+        return 
         
     # Initialize training function
     def initializeTraining(self, learning_rate, fitness_threshold, batch_size, display_step, shuffle_rate = 500, epoch_threshold = -1):
@@ -169,7 +171,8 @@ class NeuralNetworkManager:
         
         # Tensorboard
         self.train_writer = tf.summary.FileWriter(self.tensorboard_log_path, self.nn.session.graph)
-        self.merged_summary = tf.summary.merge_all()
+        #self.merged_summary = tf.summary.merge_all()
+        tf.global_variables_initializer()
         return self.train_writer
         
     # Check a state against the dataset and nn by using its id in the dataset
@@ -226,32 +229,33 @@ class NeuralNetworkManager:
             else:
                 wrong.append(i)
         
-        summary_fitness = float(fit/(size + self.epoch*self.data_set.getSize()))
-        tf.summary.scalar('fitness', summary_fitness) 
-        self.merged_summary = tf.summary.merge_all()    
+        #summary_fitness = float(fit/(size + self.epoch*self.data_set.getSize()))
+        #tf.summary.scalar('fitness', (fit/size)) 
+        #self.merged_summary = tf.summary.merge_all()    
         
-        return float(fit/size), self.merged_summary
+        return float(fit/size), tf.summary.scalar('fitness', (fit/size)) 
 
         
     # Train network
     def train(self):
-        #self.clear()
+        self.clear()
         
         print("\nTraining (Ctrl+C to interrupt):")
         signal.signal(signal.SIGINT, self.interrupt)
 
         i, batch_index, loss, fit = 0,0,0,0.0
+        fit, _ = self.checkFitness()
         self.merged_summary = tf.summary.merge_all()
         
         start_time = time.time()
         while self.training:
             batch = self.data_set.getBatch(self.batch_size, batch_index)
-            loss, summary_result = self.nn.trainStep(batch, self.merged_summary)
+            loss, summary = self.nn.trainStep(batch, self.merged_summary)
             
             if(i % self.shuffle_rate == 0 and i != 0): self.data_set.shuffle()
             
             if(i % self.display_step == 0 and i != 0):
-                fit, fitness_summary = self.checkFitness()
+                fit, _ = self.checkFitness()
                 self.addToLog(loss, fit, i)
                 print("i = " + str(i) + "\tepoch = " + str(self.epoch) + "\tloss = " + str(float("{0:.3f}".format(loss))) + "\tfit = " + str(float("{0:.3f}".format(fit))))
                 self.merged_summary = tf.summary.merge_all()
@@ -274,10 +278,13 @@ class NeuralNetworkManager:
             if(batch_index >= self.data_set.getSize()): 
                 batch_index = batch_index % self.data_set.getSize()
                 self.epoch += 1
-            #self.merged_summary = tf.summary.merge_all()
-            self.train_writer.add_summary(summary_result, i)
+            self.merged_summary = tf.summary.merge_all()
+            self.train_writer.add_summary(summary, i)
+            
             i += 1
         
+        #self.train_writer.add_graph(self, self.nn.session.graph_def)
+        self.train_writer.close()
         end_time = time.time()
         print("Time taken: " + self.formatTime(end_time - start_time))
         
