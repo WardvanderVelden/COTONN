@@ -66,10 +66,7 @@ class NeuralNetworkManager:
         self.fitnesses = []
         self.iterations = []
         
-        self.save_location = './tmp/saves/model_'+ str(time.time())
-        self.save_function = None
-        
-        self.tensorboard_log_path = './tmp/log/test'
+        self.tensorboard_log_path = './nn/graph/'
         
 
     # Getters and setters
@@ -145,7 +142,6 @@ class NeuralNetworkManager:
         self.nn.setDropoutRate(self.dropout_rate)
         self.nn.setActivationFunction(self.activation_function)
         self.nn.initializeNetwork()
-        self.train_writer = tf.summary.FileWriter(self.tensorboard_log_path, self.nn.session.graph)
         
         # Print neural network status
         if(self.debug_mode):
@@ -167,15 +163,16 @@ class NeuralNetworkManager:
         
     # Initialize fitness function
     def initializeFitnessFunction(self):
-        eta = self.data_set.getYEta()
-        size = self.data_set.getSize()
-        
-        lower_bound = tf.subtract(self.nn.y, eta)
-        upper_bound = tf.add(self.nn.y, eta)
-        
-        is_fit = tf.logical_and(tf.greater_equal(self.nn.predictor, lower_bound), tf.less(self.nn.predictor, upper_bound))
-        non_zero = tf.to_float(tf.count_nonzero(tf.reduce_min(tf.cast(is_fit, tf.int8), 1)))
-        self.fitness = non_zero/size
+        with tf.name_scope("Fitness"):
+            eta = self.data_set.getYEta()
+            size = self.data_set.getSize()
+            
+            lower_bound = tf.subtract(self.nn.y, eta)
+            upper_bound = tf.add(self.nn.y, eta)
+            
+            is_fit = tf.logical_and(tf.greater_equal(self.nn.predictor, lower_bound), tf.less(self.nn.predictor, upper_bound))
+            non_zero = tf.to_float(tf.count_nonzero(tf.reduce_min(tf.cast(is_fit, tf.int8), 1)))
+            self.fitness = non_zero/size
         
         
     # General initialization function to call all functions
@@ -183,6 +180,8 @@ class NeuralNetworkManager:
         self.initializeNeuralNetwork()
         self.initializeFitnessFunction()
         self.initializeTraining(learning_rate, fitness_threshold, batch_size, display_step, epoch_threshold, shuffle_rate)
+        
+        self.train_writer = tf.summary.FileWriter(self.tensorboard_log_path, self.nn.session.graph)
         
         
     # Check a state against the dataset and nn by using its id in the dataset
@@ -232,7 +231,8 @@ class NeuralNetworkManager:
         start_time = time.time()
         while self.training:
             batch = self.data_set.getBatch(self.batch_size, batch_index)
-            loss, summary = self.nn.trainStep(batch, self.merged_summary)
+            #loss, summary = self.nn.trainStep(batch, self.merged_summary)
+            loss = self.nn.trainStep(batch, self.merged_summary)
             
             if(i % self.shuffle_rate == 0 and i != 0): self.data_set.shuffle()
             
@@ -241,7 +241,7 @@ class NeuralNetworkManager:
                 
                 self.addToLog(loss, fit, i)
                 print("i = " + str(i) + "\tepoch = " + str(self.epoch) + "\tloss = " + str(float("{0:.3f}".format(loss))) + "\tfit = " + str(float("{0:.3f}".format(fit))))
-                self.train_writer.add_summary(summary, i)
+                #self.train_writer.add_summary(summary, i)
                 
             if(self.epoch >= self.epoch_threshold and self.epoch_threshold > 0):
                 print("i = " + str(i) + "\tepoch = " + str(self.epoch) + "\tloss = " + str(float("{0:.3f}".format(loss))) + "\tfit = " + str(float("{0:.3f}".format(fit))))

@@ -120,10 +120,11 @@ class MLP:
         
         # Training step with a batch
         def trainStep(self, batch, merged_summary):
-            with tf.name_scope('TRAIN'):
-                  acc, summary, loss = self.session.run([self.train_function, merged_summary, self.loss_function],  
-                                                        {self.x: batch[0], self.y: batch[1], self.keep_prob: self.keep_prob_float})  
-            return loss, summary
+            #with tf.name_scope('Train'):
+                #acc, summary, loss = self.session.run([self.train_function, merged_summary, self.loss_function], {self.x: batch[0], self.y: batch[1], self.dropout: self.dropout_rate})  
+            #return loss, summary
+            train, loss = self.session.run([self.train_function, self.loss_function], {self.x: batch[0], self.y: batch[1], self.dropout: self.dropout_rate})
+            return loss
             
         
         # Estimator function which estimates the desired outcome based on an input

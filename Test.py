@@ -32,15 +32,19 @@ x = tf.placeholder(tf.float32, [None, dataSet.getXDim()], "X-Data")
 y = tf.placeholder(tf.float32, [None, dataSet.getYDim()], "Y-Data")
 
 with tf.name_scope("Hidden1"):
-    hidden1 = tf.layers.dense(inputs=x, units=8, activation=tf.sigmoid, name="Dense1")
+    hidden1 = tf.layers.dense(inputs=x, units=6, activation=tf.sigmoid, name="Dense1")
     hidden1 = tf.layers.dropout(inputs=hidden1, rate=0.05)
 
 with tf.name_scope("Hidden2"):
-    hidden2 = tf.layers.dense(inputs=hidden1, units=8, activation=tf.sigmoid, name="Dense2")
+    hidden2 = tf.layers.dense(inputs=hidden1, units=6, activation=tf.sigmoid, name="Dense2")
     hidden2 = tf.layers.dropout(inputs=hidden2, rate=0.05)
+    
+with tf.name_scope("Hidden3"):
+    hidden3 = tf.layers.dense(inputs=hidden2, units=6, activation=tf.sigmoid, name="Dense3")
+    hidden3 = tf.layers.dropout(inputs=hidden3, rate=0.05)
 
 with tf.name_scope("Estimation"):
-    estimation = tf.layers.dense(inputs=hidden2, units=dataSet.getYDim(), activation=tf.sigmoid, name="Dense3")
+    estimation = tf.layers.dense(inputs=hidden3, units=dataSet.getYDim(), activation=tf.sigmoid, name="Estimation")
 
 # setup loss function
 with tf.name_scope("Loss"):
