@@ -165,7 +165,7 @@ class NeuralNetworkManager:
         upper_bound = tf.add(self.nn.y, eta)
         
         is_fit = tf.logical_and(tf.greater_equal(self.nn.predictor, lower_bound), tf.less(self.nn.predictor, upper_bound))
-        non_zero = tf.to_float(tf.count_nonzero(is_fit))
+        non_zero = tf.to_float(tf.count_nonzero(tf.reduce_min(tf.cast(is_fit, tf.int8), 1)))
         self.fitness = non_zero/size
         
         
@@ -197,39 +197,16 @@ class NeuralNetworkManager:
     # Randomly check neural network against a dataset
     def randomCheck(self, data_set):
         self.data_set = data_set
-        fit = self.checkFitness()
-        print("\nDataset fitness: " + str(float("{0:.3f}".format(fit))))
+        
+        self.initializeFitnessFunction()        
+        fit = self.nn.runInSession(self.fitness, self.data_set.x, self.data_set.y)
+        
+        print("\nDataset fitness: " + str(float("{0:.3f}".format(fit*100))) + "%")
         
         print("\nValidating:")
         for i in range(10):
             r = round(random.random()*(self.data_set.getSize()-1))
             self.checkByIndex(r, True)
-    
-    
-    # Calculate fitness based on the dataset
-    def checkFitness(self):
-        size = self.data_set.getSize()
-            
-        estimation = self.nn.estimate(self.data_set.x)
-        fit = 0
-        wrong = []
-        
-        y_eta = self.data_set.getYEta()
-        y_dim = self.data_set.getYDim()
-        
-        for i in range(size):
-            y = self.data_set.getY(i)
-            equal = True
-            for j in range(y_dim):
-                if(not((y[j] - y_eta[j]) <= estimation[i][j] and (y[j] + y_eta[j]) > estimation[i][j])):
-                    equal = False
-                
-            if(equal):
-                fit += 1
-            else:
-                wrong.append(i)
-                
-        return float(fit/size)
 
         
     # Train network

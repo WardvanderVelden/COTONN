@@ -32,12 +32,12 @@ x = tf.placeholder(tf.float32, [None, dataSet.getXDim()], "X-Data")
 y = tf.placeholder(tf.float32, [None, dataSet.getYDim()], "Y-Data")
 
 with tf.name_scope("Hidden1"):
-    hidden1 = tf.layers.dense(inputs=x, units=16, activation=tf.sigmoid, name="Dense1")
-    hidden1 = tf.layers.dropout(inputs=hidden1, rate=0.85)
+    hidden1 = tf.layers.dense(inputs=x, units=8, activation=tf.sigmoid, name="Dense1")
+    hidden1 = tf.layers.dropout(inputs=hidden1, rate=0.05)
 
 with tf.name_scope("Hidden2"):
-    hidden2 = tf.layers.dense(inputs=hidden1, units=16, activation=tf.sigmoid, name="Dense2")
-    hidden2 = tf.layers.dropout(inputs=hidden2, rate=0.85)
+    hidden2 = tf.layers.dense(inputs=hidden1, units=8, activation=tf.sigmoid, name="Dense2")
+    hidden2 = tf.layers.dropout(inputs=hidden2, rate=0.05)
 
 with tf.name_scope("Estimation"):
     estimation = tf.layers.dense(inputs=hidden2, units=dataSet.getYDim(), activation=tf.sigmoid, name="Dense3")
@@ -86,7 +86,7 @@ while epoch <= 25000:
         print("i = " + str(i) + "\tepoch = " + str(epoch) + "\tloss = " + str(float("{0:.3f}".format(l))) + " fitness = " + str(float("{0:.3f}".format(f))))
         writer.add_summary(summary, i)
         
-    if(f == 1.0):
+    if(f >= 1.0):
         print("Fitness reached 100%")
         break
     
@@ -99,7 +99,26 @@ while epoch <= 25000:
 
 #validate
 batch = dataSet.getBatch(1,1)
-print(batch[1])
-print(session.run(estimation, {x: batch[0], y: batch[1]}))
+#print(batch[1])
+#print(session.run(estimation, {x: batch[0], y: batch[1]}))
+
+# crude format of the network    
+with tf.variable_scope("Dense1", reuse=True):
+    print("W1:")
+    print(session.run(tf.get_variable("kernel")))
+    print("b1:")
+    print(session.run(tf.get_variable("bias")))
+        
+with tf.variable_scope("Dense2", reuse=True):
+    print("W2:")
+    print(session.run(tf.get_variable("kernel")))
+    print("b2:")
+    print(session.run(tf.get_variable("bias")))
+    
+with tf.variable_scope("Dense3", reuse=True):
+    print("W3:")
+    print(session.run(tf.get_variable("kernel")))
+    print("b3:")
+    print(session.run(tf.get_variable("bias")))
 
 session.close()
