@@ -13,10 +13,10 @@ import matplotlib.pyplot as plt
 # Main class from which all functions are called
 class COTONN:
     def __init__(self):
-        print("COTONN v0.5.0\n")
+        self.version = "0.5.1"
         
         self.importer = Importer()
-        self.exporter = Exporter()
+        self.exporter = Exporter(self.version)
         self.nnm = NeuralNetworkManager()
         self.staticController = StaticController()
         
@@ -24,6 +24,8 @@ class COTONN:
         
         self.importer.setDebugMode(False)
         self.nnm.setDebugMode(self.debug_mode)
+        
+        print("COTONN v" + self.version + "\n")
         
     
     # Clean memory function
@@ -57,9 +59,13 @@ class COTONN:
         
         self.nnm.plot()
 
+        fitness, wrong_states = self.nnm.checkFitness(fullSet)
         self.nnm.randomCheck(fullSet)
 
-        self.exporter.saveNetwork(self.nnm.nn.session, "./nn/model.ckpt")
+        self.exporter.setSaveLocation("./nn/")
+        self.exporter.saveNetwork(self.nnm)
+        self.exporter.saveWrongStates(wrong_states)
+        self.exporter.saveRawMLP(self.nnm)
         
         self.nnm.close()
         
@@ -88,12 +94,14 @@ class COTONN:
         self.nnm.initialize(learning_rate, fitness_threshold, batch_size, display_step, -1, 5000)
         
         self.nnm.train()
-        
-        self.nnm.plot()
 
+        fitness, wrong_states = self.nnm.checkFitness(fullSet)
         self.nnm.randomCheck(fullSet)
-
-        #self.exporter.saveNetwork(self.nnm, "./nn/model.ckpt")
+        
+        self.exporter.setSaveLocation("./nn/")
+        self.exporter.saveNetwork(self.nnm)
+        self.exporter.saveWrongStates(wrong_states)
+        self.exporter.saveRawMLP(self.nnm)
         
         self.nnm.close()
         
@@ -110,7 +118,7 @@ class COTONN:
 
         self.nnm.setDebugMode(False)
 
-        fitness = []
+        fitnesses = []
 
         for r in rates:
             print("\nLearning rate: " + str(r))
@@ -125,12 +133,13 @@ class COTONN:
             self.nnm.initializeTraining(r, 1.0, batch_size, display_step, epoch_threshold)
             self.nnm.train()
 
-            fitness.append(self.nnm.checkFitness())
+            fitness, wrong_states = self.nnm.checkFitness(dataSet)
+            self.fitnesses.append(fitness)
 
             self.nnm.close()
 
         # Plot
-        plt.semilogx(rates, fitness, 'r-')
+        plt.semilogx(rates, fitnesses, 'r-')
         plt.xlabel("Rates")
         plt.ylabel("Fitness")
         plt.grid()
@@ -141,6 +150,5 @@ class COTONN:
         self.cleanMemory()
 
 cotonn = COTONN()
-#cotonn.scoutLearningRateConvergence("controllers/vehicle/controller", 2, 256, 300, [0.01, 0.009, 0.008, 0.007, 0.006, 0.005, 0.004, 0.003], 500, 5000)
-cotonn.fullSetMLP("controllers/dcdc/controller", 2, 2**5, 0.01, 0.05, 0.95, 100, 100)
-#cotonn.subSetMLP("controllers/vehicle/controller", 0.1, 2, 32, 0.01, 0.05, 0.9, 100, 1000)
+#cotonn.fullSetMLP("controllers/dcdc/controller", 2, 2**4, 0.01, 0.05, 0.999, 100, 1000)
+cotonn.subSetMLP("controllers/vehicle/controller_large", 0.25, 2, 2**6, 0.01, 0.05, 0.9, 100, 1000)

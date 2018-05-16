@@ -81,12 +81,14 @@ class DataSet:
         ids.append(controller.getIndexOfState(h_s))
         
         # get random ids 
-        for i in range(new_size - 2):
-            while True:
-                r = math.floor(random.random()*size)
-                if r not in ids:
-                    ids.append(r)
-                    break
+#        for i in range(new_size - 2):
+#            while True:
+#                r = math.floor(random.random()*size)
+#                if r not in ids:
+#                    ids.append(r)
+#                    break
+        random_ids = random.sample(range(0, size), (new_size - 2))
+        ids += random_ids
         
         # fill dataset
         for i in range(new_size):
