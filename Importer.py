@@ -97,12 +97,11 @@ class Importer:
             line = self.raw_str[dim_left:dim_right]
             return line
       
-      def restoreNetwork(self, nnm,  meta_path):
+      def restoreNetwork(self, session,  meta_path):
             self.restore_mode = True
             self.network_saver = tf.train.Saver()
-            self.session = nnm.nn.session
 
-            self.network_saver.restore(self.session, meta_path)
+            self.network_saver.restore(session, meta_path)
             print("Network restored from path: " + meta_path)
             return self.network_saver, self.restore_mode
 
