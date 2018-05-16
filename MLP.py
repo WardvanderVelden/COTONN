@@ -30,8 +30,6 @@ class MLP:
             # Tensorflow specific
             tf.reset_default_graph()
             self.session = tf.Session()
-            
-            self.tensorboard_log_path = './tmp/log/test'
 
             
         # Setters
@@ -59,12 +57,14 @@ class MLP:
             self.y = tf.placeholder(tf.float32, [None, self.layers[-1]])
             self.dropout = tf.placeholder(tf.float32)
 
-            layer = tf.layers.dense(inputs=self.x, units=self.layers[1], activation=self.activationFunction())
-            layer = tf.layers.dropout(inputs=layer, rate=self.dropout_rate)
+            layer = tf.layers.dense(inputs=self.x, units=self.layers[1], activation=self.activationFunction(), name="layer_0")
+            layer = tf.layers.dropout(inputs=layer, rate=self.dropout_rate, name="dropout_0")
 
             for i in range(1, self.num_layers - 1):
-                layer = tf.layers.dense(inputs=layer, units=self.layers[i+1], activation=self.activationFunction())
-                layer = tf.layers.dropout(inputs=layer, rate=self.dropout_rate)
+                layer = tf.layers.dense(inputs=layer, units=self.layers[i+1], activation=self.activationFunction(), name="layer_" + str(i))
+                
+                if(i != self.num_layers - 2):
+                    layer = tf.layers.dropout(inputs=layer, rate=self.dropout_rate, name="dropout_" + str(i))
 
             self.predictor = layer
 
@@ -97,23 +97,23 @@ class MLP:
                   if(function == NeuralNetworkManager.NNOptimizer.Gradient_Descent):
                       self.train_function = tf.train.GradientDescentOptimizer(learning_rate).minimize(self.loss_function)
                       if(self.debug_mode):
-                          print("Training method: Gradient Descent")
+                          print("Training method: Gradient Descent with learning rate: " + str(learning_rate))
                   elif(function == NeuralNetworkManager.NNOptimizer.Adadelta):
                       self.train_function = tf.train.AdadeltaOptimizer(learning_rate).minimize(self.loss_function)
                       if(self.debug_mode):
-                          print("Training method: AdaDelta")
+                          print("Training method: AdaDelta with learning rate: " + str(learning_rate))
                   elif(function == NeuralNetworkManager.NNOptimizer.Adagrad):
                       self.train_function = tf.train.AdagradOptimizer(learning_rate).minimize(self.loss_function)
                       if(self.debug_mode):
-                          print("Training method: AdaGrad")
+                          print("Training method: AdaGrad with learning rate: " + str(learning_rate))
                   elif(function == NeuralNetworkManager.NNOptimizer.Adam):
                       self.train_function = tf.train.AdamOptimizer(learning_rate).minimize(self.loss_function)
                       if(self.debug_mode):
-                          print("Training method: Adam")
+                          print("Training method: Adam with learning rate: " + str(learning_rate))
                   else:
                       self.train_function = tf.train.GradientDescentOptimizer(learning_rate).minimize(self.loss_function)
                       if(self.debug_mode):
-                          print("Training method: Gradient Descent")
+                          print("Training method: Gradient Descent with learning rate: " + str(learning_rate))
            
                   self.session.run(tf.global_variables_initializer())
             return self.train_function
@@ -121,9 +121,6 @@ class MLP:
         
         # Training step with a batch
         def trainStep(self, batch, merged_summary):
-            #with tf.name_scope('Train'):
-                #acc, summary, loss = self.session.run([self.train_function, merged_summary, self.loss_function], {self.x: batch[0], self.y: batch[1], self.dropout: self.dropout_rate})  
-            #return loss, summary
             train, summary, loss = self.session.run([self.train_function, merged_summary, self.loss_function], {self.x: batch[0], self.y: batch[1], self.dropout: self.dropout_rate})
             return loss, summary
             
