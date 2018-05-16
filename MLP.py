@@ -55,16 +55,16 @@ class MLP:
         
         # Initialize network function which intializes an initial network with random weights and biases
         def initializeNetwork(self):
-            self.x = tf.placeholder(tf.float32, [None, self.layers[0]])
-            self.y = tf.placeholder(tf.float32, [None, self.layers[-1]])
+            self.x = tf.placeholder(tf.float32, [None, self.layers[0]], name='X-Data')
+            self.y = tf.placeholder(tf.float32, [None, self.layers[-1]], name='Y-Data')
             self.dropout = tf.placeholder(tf.float32)
 
-            layer = tf.layers.dense(inputs=self.x, units=self.layers[1], activation=self.activationFunction())
-            layer = tf.layers.dropout(inputs=layer, rate=self.dropout_rate)
+            layer = tf.layers.dense(inputs=self.x, units=self.layers[1], activation=self.activationFunction(), name='Layer_1')
+            layer = tf.layers.dropout(inputs=layer, rate=self.dropout_rate, name='Layer_1')
 
             for i in range(1, self.num_layers - 1):
-                layer = tf.layers.dense(inputs=layer, units=self.layers[i+1], activation=self.activationFunction())
-                layer = tf.layers.dropout(inputs=layer, rate=self.dropout_rate)
+                layer = tf.layers.dense(inputs=layer, units=self.layers[i+1], activation=self.activationFunction(), name='Layer_'+str(i+1))
+                layer = tf.layers.dropout(inputs=layer, rate=self.dropout_rate, name='Layer_'+str(i+1))
 
             self.predictor = layer
 

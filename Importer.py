@@ -9,6 +9,7 @@ class Importer:
       def __init__(self):
             self.filename = None
             self.debug_mode = False
+            self.restore_mode = False
         
       def setDebugMode(self, value):
             self.debug_mode = value
@@ -96,14 +97,15 @@ class Importer:
             line = self.raw_str[dim_left:dim_right]
             return line
       
-      def restoreNetwork(self, meta_path, session):
-            self.saver = tf.train.import_meta_graph(meta_path) # input filename meta graph -> model_name.meta
-            self.saver.restore(session, tf.train.latest_checkpoint('./'))
-            return self.saver
-            
-      
-      
-      
+      def restoreNetwork(self, nnm,  meta_path):
+            self.restore_mode = True
+            self.network_saver = tf.train.Saver()
+            self.session = nnm.nn.session
+
+            self.network_saver.restore(self.session, meta_path)
+            print("Network restored from path: " + meta_path)
+            return self.network_saver, self.restore_mode
+
       
       
       

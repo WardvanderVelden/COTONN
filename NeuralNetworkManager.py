@@ -1,6 +1,5 @@
 #import tensorflow as tf
 from BinaryEncoderDecoder import BinaryEncoderDecoder
-from Exporter import Exporter
 from MLP import MLP
 from enum import Enum
 
@@ -40,6 +39,7 @@ class NNActivationFunction(Enum):
 class NeuralNetworkManager:
     def __init__(self):
         self.type = None
+        self.nn = MLP()
         self.training_method = None
         self.activation_function = None
         self.dropout_rate = 0.0
@@ -264,6 +264,14 @@ class NeuralNetworkManager:
             
             i += 1
         
+
+        self.weights_layer = []
+        self.num_layers = self.nn.getNumLayers()
+        # Save variables from layers
+        for i in range(self.num_layers -1):
+              with tf.variable_scope("Layer_"+str(i+1), reuse=True):
+                    self.weights_layer.append(tf.get_variable("kernel"))
+ 
         end_time = time.time()
         print("Time taken: " + self.formatTime(end_time - start_time))
         
