@@ -55,11 +55,36 @@ class Exporter:
         file.close()
         print("\nRaw MLP saved to path: " + self.save_location + "nn.cot")
         
-    def saveMatlabMLP(self, nnm):
+    def saveMatlabMLP(self, controller, nnm):
         file = open(self.save_location + "nn.m", "w")
         
         session = nnm.nn.session
         layers = nnm.nn.layers
+        
+        file.write("s_eta = [")
+        for x in controller.getStateSpaceEtas(): file.write(x + " ")
+        file.write("];\n")
+        
+        file.write("s_ll = [")
+        for x in controller.getStateSpaceLowerLeft(): file.write(x + " ")
+        file.write("];\n")
+        
+        file.write("s_ur = [")
+        for x in controller.getStateSpaceUpperRight(): file.write(x + " ")
+        file.write("];\n")
+        
+        file.write("\nu_eta = [")
+        for x in controller.getInputSpaceEtas(): file.write(x + " ")
+        file.write("];\n")
+        
+        file.write("u_ll = [")
+        for x in controller.getInputSpaceLowerLeft(): file.write(x + " ")
+        file.write("];\n")
+        
+        file.write("u_ur = [")
+        for x in controller.getInputSpaceUpperRight(): file.write(x + " ")
+        file.write("];\n")
+
         
         for i in range (len(layers) - 1):
             with tf.variable_scope("layer_" + str(i), reuse=True):

@@ -6,8 +6,10 @@ function input = neuralNetwork(state, W, b)
 
     input = state;
     for i=1:layers
-        input = sigmoid(input*W{i}+b{i});
+        input = sigmoid(input*W{i}+b{i}');
     end
+    
+    input = round(input);
 end
 
 
