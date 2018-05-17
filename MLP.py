@@ -53,8 +53,8 @@ class MLP:
         
         # Initialize network function which intializes an initial network with random weights and biases
         def initializeNetwork(self):
-            self.x = tf.placeholder(tf.float32, [None, self.layers[0]])
-            self.y = tf.placeholder(tf.float32, [None, self.layers[-1]])
+            self.x = tf.placeholder(tf.float32, [None, self.layers[0]], name='X-Data')
+            self.y = tf.placeholder(tf.float32, [None, self.layers[-1]], name='Y-Data')
             self.dropout = tf.placeholder(tf.float32)
 
             layer = tf.layers.dense(inputs=self.x, units=self.layers[1], activation=self.activationFunction(), name="layer_0")

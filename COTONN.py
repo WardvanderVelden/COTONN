@@ -38,7 +38,7 @@ class COTONN:
 
 
     # Generate MLP from fullset
-    def fullSetMLP(self, filename, layer_width, layer_height, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step):
+    def fullSetMLP(self, filename, layer_width, layer_height, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step, save_option=True):
         self.staticController = self.importer.readStaticController(filename)
         
         fullSet = DataSet()
@@ -55,6 +55,7 @@ class COTONN:
         self.nnm.rectangularHiddenLayers(layer_width, layer_height)
         self.nnm.initialize(learning_rate, fitness_threshold, batch_size, display_step, -1, 5000)
         
+        # Train model and visualize performance
         self.nnm.train()
         
         self.nnm.plot()
@@ -62,17 +63,19 @@ class COTONN:
         fitness, wrong_states = self.nnm.checkFitness(fullSet)
         self.nnm.randomCheck(fullSet)
 
-        self.exporter.setSaveLocation("./nn/")
-        self.exporter.saveNetwork(self.nnm)
-        self.exporter.saveWrongStates(wrong_states)
-        self.exporter.saveRawMLP(self.nnm)
-        
+        if(save_option):
+            self.exporter.setSaveLocation("./nn/")
+            self.exporter.saveNetwork(self.nnm)
+            self.exporter.saveWrongStates(wrong_states)
+            self.exporter.saveRawMLP(self.nnm)
+
         self.nnm.close()
         
         self.cleanMemory()
 
+
     # Generate MLP from subset
-    def subSetMLP(self, filename, percentage, layer_width, layer_height, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step):
+    def subSetMLP(self, filename, percentage, layer_width, layer_height, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step, save_option=True):
         self.staticController = self.importer.readStaticController(filename)
         
         fullSet = DataSet()
@@ -93,15 +96,19 @@ class COTONN:
         self.nnm.rectangularHiddenLayers(layer_width, layer_height)
         self.nnm.initialize(learning_rate, fitness_threshold, batch_size, display_step, -1, 5000)
         
+        # Train model and visualize performance
         self.nnm.train()
+        
+        self.nnm.plot()
 
         fitness, wrong_states = self.nnm.checkFitness(fullSet)
         self.nnm.randomCheck(fullSet)
         
-        self.exporter.setSaveLocation("./nn/")
-        self.exporter.saveNetwork(self.nnm)
-        self.exporter.saveWrongStates(wrong_states)
-        self.exporter.saveRawMLP(self.nnm)
+        if(save_option):
+            self.exporter.setSaveLocation("./nn/")
+            self.exporter.saveNetwork(self.nnm)
+            self.exporter.saveWrongStates(wrong_states)
+            self.exporter.saveRawMLP(self.nnm)
         
         self.nnm.close()
         
@@ -148,7 +155,52 @@ class COTONN:
         plt.show()
         
         self.cleanMemory()
+        
+    # Generate MLP from fullset
+    def importMLP(self, import_path, filename, layer_width, layer_height, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step, save_option=True):
+        self.staticController = self.importer.readStaticController(filename)
+        
+        fullSet = DataSet()
+        fullSet.readSetFromController(self.staticController)
+        fullSet.formatToBinary()
+        
+        self.nnm.setDebugMode(True)
+        self.nnm.setType(NNTypes.MLP)
+        self.nnm.setTrainingMethod(NNOptimizer.Adam)
+        self.nnm.setActivationFunction(NNActivationFunction.Sigmoid)
+        self.nnm.setDataSet(fullSet)
+         
+        # Option to adjust parameters for new training session
+        self.nnm.setDropoutRate(dropout_rate)
+        self.nnm.rectangularHiddenLayers(layer_width, layer_height)
+        self.nnm.initialize(learning_rate, fitness_threshold, batch_size, display_step)
+        
+         # Restore Network from saved file:
+        self.importer.restoreNetwork(self.nnm.nn.session, import_path)
+      
+        # Train model and visualize performance
+        self.nnm.train()
+        self.nnm.plot()
+        self.nnm.randomCheck(fullSet)
+
+        # Save Network or Variables
+        self.exporter.saveNetwork(self.nnm, "./nn/model")
+        self.exporter.saveVariables(self.nnm, "./nn/variable", self.nnm.weights_layer) # variable input is a list or dictionairy 
+
+        self.nnm.close()
+        
+        self.cleanMemory()
 
 cotonn = COTONN()
-#cotonn.fullSetMLP("controllers/dcdc/controller", 2, 2**4, 0.01, 0.05, 0.999, 100, 1000)
-cotonn.subSetMLP("controllers/vehicle/controller_large", 0.25, 2, 2**6, 0.01, 0.05, 0.9, 100, 1000)
+
+# arg: filename, layer_width, layer_height, epoch_threshold, rates, batch_size, display_step
+#cotonn.scoutLearningRateConvergence("controllers/vehicle/controller", 2, 256, 300, [0.01, 0.009, 0.008, 0.007, 0.006, 0.005, 0.004, 0.003], 500, 5000)
+
+# arg: filename, layer_width, layer_height, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step, save_option=False
+#cotonn.fullSetMLP("controllers/dcdc/controller", 2, 2**4, 0.01, 0.05, 0.99, 100, 1000, save_option=True)
+
+# arg: filename, percentage, layer_width, layer_height, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step, save_option=False 
+#cotonn.subSetMLP("controllers/vehicle/controller", 0.1, 2, 32, 0.01, 0.05, 0.9, 100, 1000)
+
+# arg: import_path, filename, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step, save_option=False 
+cotonn.importMLP("./nn/model", "controllers/dcdc/controller", 2, 2**4, 0.01, 0.05, 0.99, 100, 1000, save_option=True)

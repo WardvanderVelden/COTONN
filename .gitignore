@@ -7,3 +7,6 @@ Convolution.py
 tmp/saves/checkpoint
 tmp/saves/model_.data-00000-of-00001
 tmp/saves/model_.index
+*.data-00000-of-00001
+*.index
+nn/checkpoint
