@@ -67,7 +67,7 @@ class COTONN:
             self.exporter.setSaveLocation("./nn/")
             self.exporter.saveNetwork(self.nnm)
             self.exporter.saveWrongStates(wrong_states)
-            self.exporter.saveMatlabMLP(self.nnm)
+            self.exporter.saveMatlabMLP(self.staticController, self.nnm)
 
         self.nnm.close()
         
@@ -108,7 +108,7 @@ class COTONN:
             self.exporter.setSaveLocation("./nn/")
             self.exporter.saveNetwork(self.nnm)
             self.exporter.saveWrongStates(wrong_states)
-            self.exporter.saveMatlabMLP(self.nnm)
+            self.exporter.saveMatlabMLP(self.staticController, self.nnm)
         
         self.nnm.close()
         
@@ -190,11 +190,12 @@ class COTONN:
             self.exporter.setSaveLocation("./nn/")
             self.exporter.saveNetwork(self.nnm)
             self.exporter.saveWrongStates(wrong_states)
-            self.exporter.saveRawMLP(self.nnm)
+            self.exporter.saveMatlabMLP(self.staticController, self.nnm)
             
         self.nnm.close()
         
         self.cleanMemory()
+
 
 cotonn = COTONN()
 
@@ -202,10 +203,11 @@ cotonn = COTONN()
 #cotonn.scoutLearningRateConvergence("controllers/vehicle/controller", 2, 256, 300, [0.01, 0.009, 0.008, 0.007, 0.006, 0.005, 0.004, 0.003], 500, 5000)
 
 # arg: filename, layer_width, layer_height, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step, save_option=False
-cotonn.fullSetMLP("controllers/dcdc/controller", 2, 2**3, 0.01, 0.05, 1.0, 100, 1000)
+cotonn.fullSetMLP("controllers/vehicle/controller", 4, 32, 0.01, 0.05, 0.95, 100, 1000)
+#cotonn.fullSetMLP("controllers/dcdc_bdd/staticController", 2, 2**5, 0.01, 0.05, 1.0, 100, 1000)
 
 # arg: filename, percentage, layer_width, layer_height, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step, save_option=False 
 #cotonn.subSetMLP("controllers/vehicle/controller", 0.1, 2, 32, 0.01, 0.05, 0.9, 100, 1000)
 
 # arg: import_path, filename, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step, save_option=False 
-#cotonn.importMLP("./nn/model", "controllers/dcdc/controller", 2, 2**4, 0.01, 0.05, 1.0, 100, 1000, save_option=True)
+#cotonn.importMLP("./nn/model", "controllers/vehicle/controller", 2, 2**8, 0.01, 0.05, 0.95, 100, 1000, save_option=True)
