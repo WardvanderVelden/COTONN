@@ -8,6 +8,7 @@ import math
 import numpy
 import signal
 import time
+from time import gmtime, strftime
 import matplotlib.pyplot as plt
 import random
 
@@ -66,7 +67,7 @@ class NeuralNetworkManager:
         self.fitnesses = []
         self.iterations = []
         
-        self.tensorboard_log_path = './nn/graph/'
+        self.tensorboard_log_path = './nn/log/'
         
 
     # Getters and setters
@@ -94,8 +95,8 @@ class NeuralNetworkManager:
     def setDropoutRate(self, value): self.dropout_rate = value
     def setShuffleRate(self, value): self.shuffle_rate = value
     def setSaveLocation(self, value): self.save_location = value
-    def setDataSet(self, data_set): self.data_set = data_set
     def setDebugMode(self, value): self.debug_mode = value
+    def setDataSet(self, data_set): self.data_set = data_set
     
     
     # Hidden layer generation functions
@@ -163,7 +164,7 @@ class NeuralNetworkManager:
         
     # Initialize fitness function
     def initializeFitnessFunction(self):
-        with tf.name_scope("Fitness"):
+        with tf.name_scope("fitness"):
             eta = self.data_set.getYEta()
             size = self.data_set.getSize()
             
@@ -173,6 +174,8 @@ class NeuralNetworkManager:
             is_fit = tf.logical_and(tf.greater_equal(self.nn.predictor, lower_bound), tf.less(self.nn.predictor, upper_bound))
             non_zero = tf.to_float(tf.count_nonzero(tf.reduce_min(tf.cast(is_fit, tf.int8), 1)))
             self.fitness = non_zero/size
+            
+            tf.summary.scalar("fitness", self.fitness)
         
         
     # General initialization function to call all functions
@@ -181,7 +184,8 @@ class NeuralNetworkManager:
         self.initializeFitnessFunction()
         self.initializeTraining(learning_rate, fitness_threshold, batch_size, display_step, epoch_threshold, shuffle_rate)
         
-        self.train_writer = tf.summary.FileWriter(self.tensorboard_log_path, self.nn.session.graph)
+        time_stamp = strftime("%y%m%d%H%M%S", gmtime())
+        self.train_writer = tf.summary.FileWriter(self.tensorboard_log_path + time_stamp, self.nn.session.graph)
         
         
     # Check a state against the dataset and nn by using its id in the dataset
@@ -200,6 +204,36 @@ class NeuralNetworkManager:
             print("u: " + str(y) + " u_: " + str(numpy.round(estimation,2)) + " within etas: " + str(equal))
             
         return equal
+    
+    
+    # Check fitness of the neural network for a specific dataset and return wrong states
+    # as of right now it assumes a binary encoding of the dataset
+    def checkFitness(self, data_set):
+        self.data_set = data_set
+        
+        size = self.data_set.getSize()
+        fit = size
+        
+        wrong = []
+        
+        x, y = self.data_set.x, self.data_set.y
+        y_eta = self.data_set.getYEta()
+        y_dim = self.data_set.getYDim()
+        
+        estimation = self.nn.estimate(self.data_set.x)
+        
+        for i in range(size):
+            equal = True
+            for j in range(y_dim):
+                if(not((y[i][j] - y_eta[j]) <= estimation[i][j] and (y[i][j] + y_eta[j]) > estimation[i][j]) and equal):
+                    wrong.append(self.bed.baton(x[i]))
+                    fit -= 1
+                    equal = False
+                    
+        fitness = fit/size*100
+        print("\nDataset fitness: " + str(float("{0:.3f}".format(fitness))) + "%")
+                    
+        return fitness, wrong
 
 
     # Randomly check neural network against a dataset
@@ -207,10 +241,7 @@ class NeuralNetworkManager:
         self.data_set = data_set
         
         self.initializeFitnessFunction()        
-        fit = self.nn.runInSession(self.fitness, self.data_set.x, self.data_set.y)
-        
-        print("\nDataset fitness: " + str(float("{0:.3f}".format(fit*100))) + "%")
-        
+
         print("\nValidating:")
         for i in range(10):
             r = round(random.random()*(self.data_set.getSize()-1))
@@ -231,8 +262,7 @@ class NeuralNetworkManager:
         start_time = time.time()
         while self.training:
             batch = self.data_set.getBatch(self.batch_size, batch_index)
-            #loss, summary = self.nn.trainStep(batch, self.merged_summary)
-            loss = self.nn.trainStep(batch, self.merged_summary)
+            loss, summary = self.nn.trainStep(batch, self.merged_summary)
             
             if(i % self.shuffle_rate == 0 and i != 0): self.data_set.shuffle()
             
@@ -241,7 +271,7 @@ class NeuralNetworkManager:
                 
                 self.addToLog(loss, fit, i)
                 print("i = " + str(i) + "\tepoch = " + str(self.epoch) + "\tloss = " + str(float("{0:.3f}".format(loss))) + "\tfit = " + str(float("{0:.3f}".format(fit))))
-                #self.train_writer.add_summary(summary, i)
+                self.train_writer.add_summary(summary, i)
                 
             if(self.epoch >= self.epoch_threshold and self.epoch_threshold > 0):
                 print("i = " + str(i) + "\tepoch = " + str(self.epoch) + "\tloss = " + str(float("{0:.3f}".format(loss))) + "\tfit = " + str(float("{0:.3f}".format(fit))))
