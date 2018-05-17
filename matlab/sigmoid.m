@@ -1,4 +1,4 @@
-function g = sigmoidFunction(x)
+function g = sigmoid(x)
 
   g = zeros(size(x));
 

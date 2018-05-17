@@ -71,11 +71,11 @@ class Exporter:
                 
                 file.write("\nW{"+ str(i+1) + "} = [")
                 np.savetxt(file, weight_eval)
-                file.write("]\n")
+                file.write("];\n")
                 
                 file.write("\nb{" + str(i+1) + "} = [")
                 np.savetxt(file, bias_eval)
-                file.write("]\n")
+                file.write("];\n")
                 
         file.close()
         print("\nMatlab MLP saved to path: " + self.save_location + "nn.m")
