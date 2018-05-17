@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 # Main class from which all functions are called
 class COTONN:
     def __init__(self):
-        self.version = "0.5.1"
+        self.version = "0.5.2"
         
         self.importer = Importer()
         self.exporter = Exporter(self.version)
@@ -67,7 +67,7 @@ class COTONN:
             self.exporter.setSaveLocation("./nn/")
             self.exporter.saveNetwork(self.nnm)
             self.exporter.saveWrongStates(wrong_states)
-            self.exporter.saveRawMLP(self.nnm)
+            self.exporter.saveMatlabMLP(self.nnm)
 
         self.nnm.close()
         
@@ -108,7 +108,7 @@ class COTONN:
             self.exporter.setSaveLocation("./nn/")
             self.exporter.saveNetwork(self.nnm)
             self.exporter.saveWrongStates(wrong_states)
-            self.exporter.saveRawMLP(self.nnm)
+            self.exporter.saveMatlabMLP(self.nnm)
         
         self.nnm.close()
         
@@ -176,17 +176,22 @@ class COTONN:
         self.nnm.initialize(learning_rate, fitness_threshold, batch_size, display_step)
         
          # Restore Network from saved file:
-        self.importer.restoreNetwork(self.nnm.nn.session, import_path)
+        self.importer.restoreNetwork(self.nnm, import_path)
       
         # Train model and visualize performance
         self.nnm.train()
         self.nnm.plot()
+        
+        fitness, wrong_states = self.nnm.checkFitness(fullSet)
         self.nnm.randomCheck(fullSet)
 
         # Save Network or Variables
-        self.exporter.saveNetwork(self.nnm, "./nn/model")
-        self.exporter.saveVariables(self.nnm, "./nn/variable", self.nnm.weights_layer) # variable input is a list or dictionairy 
-
+        if(save_option):
+            self.exporter.setSaveLocation("./nn/")
+            self.exporter.saveNetwork(self.nnm)
+            self.exporter.saveWrongStates(wrong_states)
+            self.exporter.saveRawMLP(self.nnm)
+            
         self.nnm.close()
         
         self.cleanMemory()
@@ -197,10 +202,10 @@ cotonn = COTONN()
 #cotonn.scoutLearningRateConvergence("controllers/vehicle/controller", 2, 256, 300, [0.01, 0.009, 0.008, 0.007, 0.006, 0.005, 0.004, 0.003], 500, 5000)
 
 # arg: filename, layer_width, layer_height, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step, save_option=False
-#cotonn.fullSetMLP("controllers/dcdc/controller", 2, 2**4, 0.01, 0.05, 0.99, 100, 1000, save_option=True)
+cotonn.fullSetMLP("controllers/dcdc/controller", 2, 2**3, 0.01, 0.05, 1.0, 100, 1000)
 
 # arg: filename, percentage, layer_width, layer_height, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step, save_option=False 
 #cotonn.subSetMLP("controllers/vehicle/controller", 0.1, 2, 32, 0.01, 0.05, 0.9, 100, 1000)
 
 # arg: import_path, filename, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step, save_option=False 
-cotonn.importMLP("./nn/model", "controllers/dcdc/controller", 2, 2**4, 0.01, 0.05, 0.99, 100, 1000, save_option=True)
+#cotonn.importMLP("./nn/model", "controllers/dcdc/controller", 2, 2**4, 0.01, 0.05, 1.0, 100, 1000, save_option=True)

@@ -53,18 +53,18 @@ class MLP:
         
         # Initialize network function which intializes an initial network with random weights and biases
         def initializeNetwork(self):
-            self.x = tf.placeholder(tf.float32, [None, self.layers[0]], name='X-Data')
-            self.y = tf.placeholder(tf.float32, [None, self.layers[-1]], name='Y-Data')
-            self.dropout = tf.placeholder(tf.float32)
+            self.x = tf.placeholder(tf.float32, [None, self.layers[0]], name='x-data')
+            self.y = tf.placeholder(tf.float32, [None, self.layers[-1]], name='y-data')
+            self.dropout = tf.placeholder(tf.float32, name="dropout_rate")
 
             layer = tf.layers.dense(inputs=self.x, units=self.layers[1], activation=self.activationFunction(), name="layer_0")
-            layer = tf.layers.dropout(inputs=layer, rate=self.dropout_rate, name="dropout_0")
+            layer = tf.layers.dropout(inputs=layer, rate=self.dropout, name="dropout_0")
 
             for i in range(1, self.num_layers - 1):
                 layer = tf.layers.dense(inputs=layer, units=self.layers[i+1], activation=self.activationFunction(), name="layer_" + str(i))
                 
                 if(i != self.num_layers - 2):
-                    layer = tf.layers.dropout(inputs=layer, rate=self.dropout_rate, name="dropout_" + str(i))
+                    layer = tf.layers.dropout(inputs=layer, rate=self.dropout, name="dropout_" + str(i))
 
             self.predictor = layer
 
@@ -93,7 +93,7 @@ class MLP:
         
         # Intialize training function
         def initializeTrainFunction(self, function, learning_rate):
-            with tf.name_scope('Optimizer'):
+            with tf.name_scope('optimizer'):
                   if(function == NeuralNetworkManager.NNOptimizer.Gradient_Descent):
                       self.train_function = tf.train.GradientDescentOptimizer(learning_rate).minimize(self.loss_function)
                       if(self.debug_mode):

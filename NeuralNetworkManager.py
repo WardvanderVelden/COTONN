@@ -293,14 +293,6 @@ class NeuralNetworkManager:
                 self.epoch += 1
             
             i += 1
-        
-
-        self.weights_layer = []
-        self.num_layers = self.nn.getNumLayers()
-        # Save variables from layers
-        for i in range(self.num_layers -1):
-              with tf.variable_scope("Layer_"+str(i+1), reuse=True):
-                    self.weights_layer.append(tf.get_variable("kernel"))
  
         end_time = time.time()
         print("Time taken: " + self.formatTime(end_time - start_time))

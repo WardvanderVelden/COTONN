@@ -17,8 +17,8 @@ class Exporter:
         session = nnm.nn.session
             
         # Save the given session      
-        self.network_saver.save(session, self.save_location + "model.ckpt")  
-        print("\nModel saved in path: " + self.save_location + "model.ckpt")
+        self.network_saver.save(session, self.save_location + "model")  
+        print("\nModel saved in path: " + self.save_location + "model")
     
     
     def saveVariables(self, nnm, list_variables): 
@@ -27,8 +27,8 @@ class Exporter:
         session = nnm.nn.session
         
         # Save the given session      
-        self.saver.save(session, self.save_location)
-        print("\nVariables saved in path: " + self.save_location)
+        self.saver.save(session, self.save_location + "variable")
+        print("\nVariables saved in path: " + self.save_location + "variable")
     
     
     def saveRawMLP(self, nnm):
@@ -54,12 +54,39 @@ class Exporter:
                 
         file.close()
         print("\nRaw MLP saved to path: " + self.save_location + "nn.cot")
+        
+    def saveMatlabMLP(self, nnm):
+        file = open(self.save_location + "nn.m", "w")
+        
+        session = nnm.nn.session
+        layers = nnm.nn.layers
+        
+        for i in range (len(layers) - 1):
+            with tf.variable_scope("layer_" + str(i), reuse=True):
+                weight = tf.get_variable("kernel")
+                bias = tf.get_variable("bias")
+                
+                weight_eval = session.run(weight)
+                bias_eval = session.run(bias)
+                
+                file.write("\nW{"+ str(i+1) + "} = [")
+                np.savetxt(file, weight_eval)
+                file.write("]\n")
+                
+                file.write("\nb{" + str(i+1) + "} = [")
+                np.savetxt(file, bias_eval)
+                file.write("]\n")
+                
+        file.close()
+        print("\nMatlab MLP saved to path: " + self.save_location + "nn.m")
     
     
     def saveWrongStates(self, wrong_states):
         file = open(self.save_location + "wrong_states.txt", "w")
         file.write("COTONN v" + self.version + " Wrong states (#" + str(len(wrong_states)) + "): \n")
         
+        if(len(wrong_states)== 0): return        
+                
         for i in range(len(wrong_states)):
             file.write(str(wrong_states[i]) + "\n")
             
