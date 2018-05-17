@@ -2,6 +2,7 @@ from StaticController import StaticController
 import numpy as np
 import tensorflow as tf
 
+
 # Importer class which will be responsible for reading in controller files and formatting them 
 # such that they can be read into PlainControllers or BddControllers and used as neural network
 # training data
