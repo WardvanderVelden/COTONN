@@ -1,47 +1,22 @@
 % Neural network simulation
+clear all
+close all
 
 %% simulation
+% controller information
+eta = [0.01 0.01];          %etas
+lower_left = [0.5 5];       %lower left boundary
+upper_right = [1.5 6];      %upper right boundary
+dim = 2;                    %number of dimensions
 
-%
 % initial state
-x0=[1.35; 5.755];
-tau_s=0.5;
+x = [1.2 5.6];              %initial state
+% id = 0;                     
+tau_s = 0.5;                
 
-% load controller from file
+fout = 1000;
 
-
-%% convert state vector to state ID
-
-% state space
-%il_left = controller.XXX;
-%il_right = controller.XXX;
-%vc_left = controller.XXX;
-%vc_right = controller.XXX;
-
-il_left = 1.15;
-il_right = 1.55;
-vc_left = 5.45;
-vc_right = 5.85;
-
-eta1 = 5*10^-4
-eta2= 5*10^-4
-etas = [eta1; eta2]
-
-b = [il_left il_right; vc_left vc_right]
-
-state_ID = (x0(1,:) - b(1,1))/etas(1,:)+ ((x0(2,:) - b(2,1))/etas(2,:))*(b(1,2)-b(1,1))/etas(2,:)
-
-%% convert state ID to binary state vector
-bin_state_vec = de2bi(round(state_ID),14)
-
-%% neural network implementation
-
-%weights
-
-%input_neurons = length(bin_state_vec)
-input_neurons = 2
-neurons_layer1 = 3
-
+%weigths and biases
 w1 = [[-1.34741802e+01  2.92616439e+00  8.68536091e+00  2.88801265e+00  -2.47913432e+00 -1.70367730e+00 -6.52740049e+00  5.22704411e+00  -3.16685128e+00  5.86374617e+00  3.64982486e+00  2.95019925e-01   1.51145697e+00 -8.89692497e+00  3.26550627e+00  2.95324898e+00]
  [ 1.02881014e+00 -4.79029131e+00 -3.29286647e+00  1.11886425e+01  -1.76898873e+00  5.30367470e+00 -1.79086864e+00  2.26089048e+00  -6.08160591e+00  3.95950198e+00  1.52980232e+00 -2.22575998e+00   7.32100725e+00 -4.59423637e+00 -1.19947338e+00  6.83767176e+00]
  [-4.53648520e+00 -1.78235924e+00 -9.68633115e-01  6.17334557e+00  -4.77386141e+00  3.59931731e+00  3.34234595e+00 -5.67723227e+00   2.81812620e+00  1.20696306e+01  3.52979612e+00 -2.00924540e+00   2.79823160e+00  3.44112396e+00  2.84392691e+00  8.13232994e+00]
@@ -55,7 +30,7 @@ w1 = [[-1.34741802e+01  2.92616439e+00  8.68536091e+00  2.88801265e+00  -2.47913
  [ 1.09639728e+00  2.62577623e-01 -8.08455944e-01  1.65911114e+00   1.74740803e+00  1.46482849e+00  1.25312102e+00  2.73099804e+00   1.04265988e+00  3.19009948e+00 -3.50402403e+00 -1.47393990e+00   1.12906384e+00 -5.23247421e-01 -7.53174067e-01  2.58227062e+00]
  [ 4.66933578e-01  2.21147776e+00 -2.76674747e-01  9.43064928e-01  -1.64041638e+00  7.07617342e-01  6.93250179e-01  1.22365952e+00   6.66063070e-01  1.49681199e+00 -4.10544014e+00 -1.01518762e+00   5.38982868e-01  6.05426979e+00 -2.54030943e+00  1.38582456e+00]
  [ 2.68847466e-01  1.57501984e+00  5.91088533e-01  4.85203713e-01  -1.22967744e+00  3.73393655e-01  3.34997594e-01  8.45267892e-01   2.08008543e-01  4.71230507e-01  9.04820144e-01 -6.86247349e-02   3.91259521e-01 -2.78106022e+00  2.29794431e+00  5.49597263e-01]
- [ 2.23374609e-02  4.72290039e-01  3.45077425e-01  2.71979570e-01   1.64362282e-01  2.07045898e-01  1.20741628e-01  4.57300872e-01   1.51844397e-02  2.55272150e-01 -2.23412848e+00 -9.41283256e-02   2.66731888e-01 -1.48741937e+00  7.32797980e-02  1.97726086e-01]]
+ [ 2.23374609e-02  4.72290039e-01  3.45077425e-01  2.71979570e-01   1.64362282e-01  2.07045898e-01  1.20741628e-01  4.57300872e-01   1.51844397e-02  2.55272150e-01 -2.23412848e+00 -9.41283256e-02   2.66731888e-01 -1.48741937e+00  7.32797980e-02  1.97726086e-01]];
 w2 = [[ -0.2456986    2.1838877    0.55309314  -1.4822026   -2.5276928    0.45798942   1.8226968   -1.0535165    0.7756932    1.9871323    2.5297806   -1.8404465    2.0990522    1.9889071    1.6945523   -2.3954656 ]
  [ -0.63266593   0.5139694    0.8689315   -0.97269195  -1.0299805    0.68515563   1.3382466    0.37312827  -0.20161451   0.65191406    0.44437313  -0.56189054   0.8106951    0.9857458    1.0079654   -1.1924499 ]
  [ -0.1441254    1.9642749   -0.09267757  -1.3923382   -2.8343296   -0.21496005   1.8624259    0.12921236   1.3468939    1.4537749    2.155361    -1.975263     1.6181201    1.2641774    2.0739176   -2.9102097 ]
@@ -71,7 +46,7 @@ w2 = [[ -0.2456986    2.1838877    0.55309314  -1.4822026   -2.5276928    0.4579
  [  4.0459085    2.201307    -3.6286914   -2.9412868   -3.848493    2.396409     3.1164856   -3.4648917    3.991246     2.3709493    2.5861478   -4.0546474    2.371822     2.4037318   -2.6177177   -2.993082  ]
  [  3.7457135    0.5832888    2.3297524    1.6157366    0.78272194   -1.9669561   -0.5287501    2.8249824   -4.9243693    0.20602672    0.3505684    0.4657545    0.86891145   0.3183055    0.44620737    0.9051119 ]
  [ -0.9615138    1.4863558   -0.6072093   -1.2363919    0.02260777    1.7492876    0.26018637  -0.49601212   0.45509824   1.2108469    1.2529846   -0.4190067    1.2285562    1.4210244   -0.82007104    0.17116068]
- [  3.5561707    2.6028407   -2.9292455   -2.4244707   -2.3288305    3.2604094    2.6852994   -2.4037774    2.85885      2.5061727    2.8030577   -3.0079927    2.515976     2.2277732   -1.5435371   -2.235766  ]]
+ [  3.5561707    2.6028407   -2.9292455   -2.4244707   -2.3288305    3.2604094    2.6852994   -2.4037774    2.85885      2.5061727    2.8030577   -3.0079927    2.515976     2.2277732   -1.5435371   -2.235766  ]];
 w3= [[ 5.63888  ]
  [ 4.440984 ]
  [-7.1250596]
@@ -87,42 +62,121 @@ w3= [[ 5.63888  ]
  [ 5.4256086]
  [ 5.379829 ]
  [-9.7993355]
- [-5.975621 ]]
+ [-5.975621 ]];
 
 %biases
 
-b1 = [-3.8068194   0.60706425 -1.1569055  -2.166055   -0.71231997 -9.391826 -4.5541005  -2.0212002  -4.3530216  -2.0277283   0.7682767   1.5106804  2.530172   -3.2879233  -1.6525985  -4.2602444 ]
-b2 = [-0.42601705 -0.00976437 -0.23401743  0.10211559 -0.31611943  0.69645375  0.29217803 -0.37171334 -0.06554426  0.10073158  0.26714036 -0.31251445  0.10920024 -0.02358521  0.4097931  -0.23793441]
-b3 = [-0.11324169]
+b1 = [-3.8068194   0.60706425 -1.1569055  -2.166055   -0.71231997 -9.391826 -4.5541005  -2.0212002  -4.3530216  -2.0277283   0.7682767   1.5106804  2.530172   -3.2879233  -1.6525985  -4.2602444 ];
+b2 = [-0.42601705 -0.00976437 -0.23401743  0.10211559 -0.31611943  0.69645375  0.29217803 -0.37171334 -0.06554426  0.10073158  0.26714036 -0.31251445  0.10920024 -0.02358521  0.4097931  -0.23793441];
+b3 = [-0.11324169];
 
-input_layer1 = bin_state_vec*w1+b1
+% %% convert state vector to state ID
+% 
+% % // number of grid points:     (m_last[i]-m_first[i])/m_eta[i] + 1
+% % // ids per dimension:         ipd[0]=1; ipd[i]=ipd[i-1]*no_grid_points[i-1]
+% ngp = zeros(1, dim);
+% ipd = ones(1, dim);
+% 
+% for i = 1:dim
+%     ngp(i) = (upper_right(i)-lower_left(i))/eta(i) + 1;
+%     
+%     if (i ~= 1)
+%         ipd(i) = ipd(i-1)*ngp(i-1); 
+%     end
+% end
+% 
+% % const grid_point_t& x; // state space vector
+% % abs_type id = 0; // id
+% % double d_id; // helper variable
+% % double eta_h; // eta per dimension
+% % 
+% % // for every dimension
+% % for(int k=0; k<m_dim; k++) {
+% % 
+% %   d_id = x[k]-m_first[k]; // relative difference between point and the corner of the state space
+% % 
+% %   //id += static_cast<abs_type>((d_id+eta_h )/m_eta[k])*m_NN[k];
+% %   id += round((d_id+m_eta[k]/2.0)/m_eta[k])*ipd[k]
+% % }
+% % return id;
+% 
+% 
+% for i = 1:dim
+%    d_id = x(i) - lower_left(i);
+%    id = id + floor((d_id+eta(i)/2.0)/eta(i))*ipd(i);
+% end
+% 
+% id
+% 
+% %% convert state ID to binary state vector
+% bin_state_vec = de2bi(round(id),14)
+% 
+% %% neural network implementation
+% 
+% %weights
+% 
+% %input_neurons = length(bin_state_vec)
+% input_neurons = 2
+% neurons_layer1 = 3
 
-output_layer1 = sigmoidFunction(input_layer1)
 
-input_layer2 = output_layer1*w2+b2
+%% convert output to binary output to input ID
+  
+% calculating number of grid points and id's per dimension
+ngp = zeros(1, dim);
+    
+ipd = ones(1, dim);
 
-output_layer2 = sigmoidFunction(input_layer2)
+    for i = 1:dim
+        ngp(i) = (upper_right(i)-lower_left(i))/eta(i) + 1;
+    
+        if (i ~= 1)
+        ipd(i) = ipd(i-1)*ngp(i-1); 
+        end
+    end
+    
+% simulate closed loop system
+y=x;
+v=[];
+loop=3;
 
-input_layer3 = output_layer2*w3+b3
+while(loop>0)
+	loop=loop-1;
+    
+%     if x(1)>upper_right(1) || x(1)<lower_left(1) || x(2)>upper_right(2) || x(2)<lower_left(2)
+%         loop
+%         break
+%     end 
+id=0 ;       
+    for i = 1:dim
+        d_id = x(end,i) - lower_left(i)
+        id = id + floor((d_id+eta(i)/2.0)/eta(i))*ipd(i)
+    end
+
+id;
+
+id = de2bi(round(id),14);
+
+input_layer1 = id*w1+b1;
+
+output_layer1 = sigmoidFunction(input_layer1);
+
+input_layer2 = output_layer1*w2+b2;
+
+output_layer2 = sigmoidFunction(input_layer2);
+
+input_layer3 = output_layer2*w3+b3;
 
 output_layer3 = sigmoidFunction(input_layer3)
 
-%% convert output to binary output to input ID
-
 input_ID = round(output_layer3)
+
 input = input_ID+1
 
-% simulate closed loop system
-y=x0;
-v=[];
-loop=100;
-while(loop>0)
-	loop=loop-1;
+v=[v; input];
+[t x]=ode45(@unicycle_ode,[0 tau_s], y(end,:), odeset('abstol',1e-10,'reltol',1e-10),input')
 
-  v=[v; input];
-  [t x]=ode45(@unicycle_ode,[0 tau_s], y(end,:), odeset('abstol',1e-10,'reltol',1e-10),input');
-
-  y=[y; x(end,:)];
+y=[y; x(end,:)]
 end
 
 %% plot the vehicle domain
@@ -131,8 +185,8 @@ colors=get(groot,'DefaultAxesColorOrder');
 
 % plot controller domain
 %dom=controller.domain;
-%plot(dom(:,1),dom(:,2),'.','color',0.6*ones(3,1))
-%hold on
+plot([1.15 1.55],[5.45 5.85],'.','color',0.6*ones(3,1))
+hold on
 
 % plot initial state  and trajectory
 plot(y(:,1),y(:,2),'k.-')
@@ -140,16 +194,16 @@ hold on
 plot(y(1,1),y(1,2),'.','color',colors(5,:),'markersize',20)
 
 % plot safe set
-eta_half=1.0/4e3;
-v=[1.15-eta_half 5.45-eta_half;...
-   1.55+eta_half 5.45-eta_half;...
-   1.15-eta_half 5.85+eta_half;...
-   1.55+eta_half 5.85+eta_half ];
-patch('vertices',v,'faces',[1 2 4 3],'facecolor','none','edgec',colors(2,:),'linew',1)
-hold on
+% eta_half=eta/2;
+% v=[lower_left(1)-eta_half lower_left(2)-eta_half;...
+%    upper_right(1)+eta_half lower_left(2)-eta_half;...
+%    lower_left(1)-eta_half upper_right(2)+eta_half;...
+%    upper_right(1)+eta_half upper_right(2)+eta_half ];
+% patch('vertices',v,'faces',[1 2 4 3],'facecolor','none','edgec',colors(2,:),'linew',1)
+% hold on
 
 box on
-axis([1.1 1.6 5.4 5.9])
+axis([1.15 1.55 5.45 5.85])
 
 
 %set(gcf,'paperunits','centimeters','paperposition',[0 0 16 10],'papersize',[16 10])
