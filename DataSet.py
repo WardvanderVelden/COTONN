@@ -1,6 +1,6 @@
 from BinaryEncoderDecoder import BinaryEncoderDecoder
+from Utilities import Utilities
 
-import math
 import random
 
 # Dataset class which will contain the data for nn training and functions to read controllers into the specific
@@ -67,7 +67,8 @@ class DataSet:
         self.x_eta = controller.getStateSpaceEtas()
         self.y_eta = controller.getInputSpaceEtas()
         
-        print("Dataset size: " + str(self.size))
+        utils = Utilities()
+        print("Dataset size: " + str(self.size) + " - " + utils.formatBytes(self.size*2*4) + " (int32)")
             
     # Read pseudo random subset from controller
     def readSubsetFromController(self, controller, percentage):
@@ -81,12 +82,6 @@ class DataSet:
         ids.append(controller.getIndexOfState(h_s))
         
         # get random ids 
-#        for i in range(new_size - 2):
-#            while True:
-#                r = math.floor(random.random()*size)
-#                if r not in ids:
-#                    ids.append(r)
-#                    break
         random_ids = random.sample(range(0, size), (new_size - 2))
         ids += random_ids
         
@@ -104,7 +99,8 @@ class DataSet:
         self.x_eta = controller.getStateSpaceEtas()
         self.y_eta = controller.getInputSpaceEtas()
         
-        print("Dataset size: " + str(self.size))
+        utils = Utilities()
+        print("Dataset size: " + str(self.size) + " - " + utils.formatBytes(self.size*2*4) + " (int32)")
 
         
     # Shuffle data

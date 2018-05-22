@@ -48,7 +48,7 @@ class MLP:
         
         # tensorflow session functions
         def getSession(self): return self.session
-        def runInSession(self, fetch, x, y): return self.session.run(fetch, {self.x: x, self.y: y})
+        def runInSession(self, fetch, x, y, dropout_rate): return self.session.run(fetch, {self.x: x, self.y: y, self.dropout: dropout_rate})
         
         
         # Initialize network function which intializes an initial network with random weights and biases
@@ -129,6 +129,24 @@ class MLP:
         def estimate(self, x):
             return self.session.run(self.predictor, {self.x: x, self.dropout: 0.0})
             
+        
+        # Calculate network data size assuming default activation function
+        def calculateDataSize(self):
+            doubles = 0
+            for i in range(0, self.num_layers - 1):
+                # weights
+                a = self.layers[i]
+                b = self.layers[i+1]
+                
+                # weights
+                doubles += a*b 
+                doubles += 2; # weight matrix dimensions
+                
+                doubles += b # biases
+                doubles += 1; # bias vector dimension
+                
+            return doubles*8
+        
         
         # Save
         def save(self, filename):

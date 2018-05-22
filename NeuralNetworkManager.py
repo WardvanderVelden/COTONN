@@ -1,5 +1,6 @@
 #import tensorflow as tf
 from BinaryEncoderDecoder import BinaryEncoderDecoder
+from Utilities import Utilities
 from MLP import MLP
 from enum import Enum
 
@@ -59,6 +60,7 @@ class NeuralNetworkManager:
         self.data_set = None
         
         self.bed = BinaryEncoderDecoder()
+        self.utils = Utilities()
         
         self.debug_mode = False
         
@@ -267,7 +269,7 @@ class NeuralNetworkManager:
             if(i % self.shuffle_rate == 0 and i != 0): self.data_set.shuffle()
             
             if(i % self.display_step == 0 and i != 0):
-                fit = self.nn.runInSession(self.fitness, self.data_set.x, self.data_set.y)
+                fit = self.nn.runInSession(self.fitness, self.data_set.x, self.data_set.y, 1.0)
                 
                 self.addToLog(loss, fit, i)
                 print("i = " + str(i) + "\tepoch = " + str(self.epoch) + "\tloss = " + str(float("{0:.3f}".format(loss))) + "\tfit = " + str(float("{0:.3f}".format(fit))))
@@ -295,17 +297,8 @@ class NeuralNetworkManager:
             i += 1
  
         end_time = time.time()
-        print("Time taken: " + self.formatTime(end_time - start_time))
+        print("Time taken: " + self.utils.formatTime(end_time - start_time))
         
-        
-    # Format
-    def formatTime(self, time):
-        h = math.floor(time / 3600)
-        m = math.floor(time / 60) % 60
-        s = time - h*3600 - m*60
-        
-        return str(h)+" hrs "+str(m)+" mins "+str(float("{0:.2f}".format(s)))+" secs"
-            
         
     # Interrupt handler to interrupt the training while in progress
     def interrupt(self, signal, frame):
@@ -337,6 +330,13 @@ class NeuralNetworkManager:
         self.losses.append(loss)
         self.fitnesses.append(fit)
         self.iterations.append(iteration)
+        
+        
+    # Get projected data size
+    def getDataSize(self):
+        size = self.nn.calculateDataSize()     
+        print("Minimal neural network size of: " + self.utils.formatBytes(size))
+        return size
 
     # Clear variables
     def clear(self):
