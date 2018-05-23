@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 # Main class from which all functions are called
 class COTONN:
     def __init__(self):
-        self.version = "0.5.3"
+        self.version = "0.5.4"
         
         self.importer = Importer()
         self.exporter = Exporter(self.version)
@@ -70,6 +70,7 @@ class COTONN:
             self.exporter.saveNetwork(self.nnm)
             self.exporter.saveWrongStates(wrong_states)
             self.exporter.saveMatlabMLP(self.staticController, self.nnm)
+            self.exporter.saveBinary(self.nnm)
 
         self.nnm.close()
         
@@ -205,17 +206,5 @@ class COTONN:
 
 
 cotonn = COTONN()
-
-# arg: filename, layer_width, layer_height, epoch_threshold, rates, batch_size, display_step
-#cotonn.scoutLearningRateConvergence("controllers/vehicle/controller", 2, 256, 300, [0.01, 0.009, 0.008, 0.007, 0.006, 0.005, 0.004, 0.003], 500, 5000)
-
-# arg: filename, layer_width, layer_height, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step, save_option=False
-#cotonn.fullSetMLP("controllers/dcdc/simple", 2, 4, 0.01, 0.05, 1.0, 100, 1000)
-#cotonn.fullSetMLP("controllers/dcdc_bdd/staticController", 3, 2**6, 0.01, 0.05, 1.0, 100, 1000)
-
-# arg: filename, percentage, layer_width, layer_height, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step, save_option=False 
-#cotonn.subSetMLP("controllers/dcdc/controller", 0.25, 2, 16, 0.01, 0.05, 1.0, 100, 1000)
-cotonn.subSetMLP("controllers/dcdc_bdd/staticController", 0.25, 3, 16, 0.01, 0.05, 1.0, 100, 1000)
-
-# arg: import_path, filename, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step, save_option=False 
+cotonn.fullSetMLP("controllers/vehicle_large_bdd/controller", 4, 2**7, 0.01, 0.05, 1.0, 100, 1000)
 #cotonn.importMLP("./nn/model", "controllers/vehicle/controller", 2, 2**8, 0.01, 0.05, 0.95, 100, 1000, save_option=True)

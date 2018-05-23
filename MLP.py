@@ -132,20 +132,20 @@ class MLP:
         
         # Calculate network data size assuming default activation function
         def calculateDataSize(self):
-            doubles = 0
+            floats = 0
             for i in range(0, self.num_layers - 1):
                 # weights
                 a = self.layers[i]
                 b = self.layers[i+1]
                 
                 # weights
-                doubles += a*b 
-                doubles += 2; # weight matrix dimensions
+                floats += a*b 
+                floats += 2; # weight matrix dimensions
                 
-                doubles += b # biases
-                doubles += 1; # bias vector dimension
+                floats += b # biases
+                floats += 1; # bias vector dimension
                 
-            return doubles*8
+            return floats*4
         
         
         # Save

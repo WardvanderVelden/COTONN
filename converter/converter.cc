@@ -5,20 +5,16 @@
 #include "scots.hh"
 
 /*
-	This parameters need to be changed in order to operate the converter
+	These parameters need to be changed in order to operate the converter
 */
-const std::string controller_filename = "../../Scots2C/controllers/dcdc_bdd/controller";
-const std::string new_controller_filename = "../../Scots2C/controllers/dcdc_bdd/newStaticController";
-const int state_dim = 2;
-const int input_dim = 1;
+const std::string controller_filename = "../controllers/vehicle_large_bdd/bdd/controller";
+const std::string new_controller_filename = "../controllers/vehicle_large_bdd/controller";
+const int state_dim = 3;
+const int input_dim = 2;
 
 
 /*
-	TODO:
-	- Make sure behaviour is absolutely the same as bdd controller for v1.01
-	- Put functions in separate class
-	- Order write file function
-	- (Make write file function independent of lib (so lib can be updated without breaking the converter))
+
 */
 const bool debug_mode = false;
 
@@ -132,7 +128,7 @@ bool write_new_controller(scots::SymbolicSet &controller, std::vector<Controller
     	ss_lb[i] = lb[i];
     }
 
-    for(int i = 0; i < (state_dim + input_dim); i++) {
+    for(int i = 0; i < input_dim; i++) {
     	is_eta[i] = eta[i+state_dim];
     	is_ub[i] = ub[i+state_dim];
     	is_lb[i] = lb[i+state_dim];
@@ -170,7 +166,9 @@ bool write_new_controller(scots::SymbolicSet &controller, std::vector<Controller
 }
 
 int main() {
-	print("Controller converter v1.01");
+	print("Controller converter v1.0");
+
+	// initialize CUDD and controller
 	Cudd manager;
 	BDD bdd;
 	scots::SymbolicSet controller;

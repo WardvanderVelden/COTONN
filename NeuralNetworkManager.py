@@ -9,7 +9,7 @@ import math
 import numpy
 import signal
 import time
-from time import gmtime, strftime
+
 import matplotlib.pyplot as plt
 import random
 
@@ -186,7 +186,8 @@ class NeuralNetworkManager:
         self.initializeFitnessFunction()
         self.initializeTraining(learning_rate, fitness_threshold, batch_size, display_step, epoch_threshold, shuffle_rate)
         
-        time_stamp = strftime("%y%m%d%H%M%S", gmtime())
+        utils = Utilities()
+        time_stamp = utils.getTimestamp()
         self.train_writer = tf.summary.FileWriter(self.tensorboard_log_path + time_stamp, self.nn.session.graph)
         
         
