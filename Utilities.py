@@ -16,9 +16,9 @@ class Utilities:
             byte_str = str(float("{0:.2f}".format(b/1e3))) + " kB"
             
         if(b >= 1e6 and b < 1e9):
-            byte_str = str(float("{0:.2f}".format(b/1e3))) + " MB"
+            byte_str = str(float("{0:.2f}".format(b/1e6))) + " MB"
             
         if(b >= 1e9 and b < 1e12):
-            byte_str = str(float("{0:.2f}".format(b/1e3))) + " GB"
+            byte_str = str(float("{0:.2f}".format(b/1e9))) + " GB"
             
         return byte_str
