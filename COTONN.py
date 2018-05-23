@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 # Main class from which all functions are called
 class COTONN:
     def __init__(self):
-        self.version = "0.5.2"
+        self.version = "0.5.3"
         
         self.importer = Importer()
         self.exporter = Exporter(self.version)
@@ -55,6 +55,8 @@ class COTONN:
         self.nnm.rectangularHiddenLayers(layer_width, layer_height)
         self.nnm.initialize(learning_rate, fitness_threshold, batch_size, display_step, -1, 5000)
         
+        self.nnm.getDataSize()
+        
         # Train model and visualize performance
         self.nnm.train()
         
@@ -95,6 +97,8 @@ class COTONN:
         self.nnm.setDropoutRate(dropout_rate)
         self.nnm.rectangularHiddenLayers(layer_width, layer_height)
         self.nnm.initialize(learning_rate, fitness_threshold, batch_size, display_step, -1, 5000)
+        
+        self.nnm.getDataSize()
         
         # Train model and visualize performance
         self.nnm.train()
@@ -175,11 +179,14 @@ class COTONN:
         self.nnm.rectangularHiddenLayers(layer_width, layer_height)
         self.nnm.initialize(learning_rate, fitness_threshold, batch_size, display_step)
         
+        self.nnm.getDataSize()
+        
          # Restore Network from saved file:
         self.importer.restoreNetwork(self.nnm, import_path)
       
         # Train model and visualize performance
         self.nnm.train()
+        
         self.nnm.plot()
         
         fitness, wrong_states = self.nnm.checkFitness(fullSet)
@@ -203,11 +210,12 @@ cotonn = COTONN()
 #cotonn.scoutLearningRateConvergence("controllers/vehicle/controller", 2, 256, 300, [0.01, 0.009, 0.008, 0.007, 0.006, 0.005, 0.004, 0.003], 500, 5000)
 
 # arg: filename, layer_width, layer_height, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step, save_option=False
-cotonn.fullSetMLP("controllers/vehicle/controller", 4, 32, 0.01, 0.05, 0.95, 100, 1000)
-#cotonn.fullSetMLP("controllers/dcdc_bdd/staticController", 2, 2**5, 0.01, 0.05, 1.0, 100, 1000)
+#cotonn.fullSetMLP("controllers/dcdc/simple", 2, 4, 0.01, 0.05, 1.0, 100, 1000)
+#cotonn.fullSetMLP("controllers/dcdc_bdd/staticController", 3, 2**6, 0.01, 0.05, 1.0, 100, 1000)
 
 # arg: filename, percentage, layer_width, layer_height, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step, save_option=False 
-#cotonn.subSetMLP("controllers/vehicle/controller", 0.1, 2, 32, 0.01, 0.05, 0.9, 100, 1000)
+#cotonn.subSetMLP("controllers/dcdc/controller", 0.25, 2, 16, 0.01, 0.05, 1.0, 100, 1000)
+cotonn.subSetMLP("controllers/dcdc_bdd/staticController", 0.25, 3, 16, 0.01, 0.05, 1.0, 100, 1000)
 
 # arg: import_path, filename, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step, save_option=False 
 #cotonn.importMLP("./nn/model", "controllers/vehicle/controller", 2, 2**8, 0.01, 0.05, 0.95, 100, 1000, save_option=True)
