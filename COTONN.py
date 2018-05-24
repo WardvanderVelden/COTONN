@@ -249,9 +249,8 @@ class COTONN:
         self.cleanMemory()
 
 
-
 cotonn = COTONN()
-cotonn.fullSetMLP("controllers/dcdc_small/simple", 2, 4, 0.02, 0.10, 1.0, 100, 1000)
+cotonn.fullSetMLP("controllers/dcdc_small/controller", 1, 16, 0.005, 0.05, 1.0, 100, 1000)
 #cotonn.importMLP("./nn/model", "controllers/vehicle/controller", 2, 2**8, 0.01, 0.05, 0.95, 100, 1000, save_option=True)
 
 

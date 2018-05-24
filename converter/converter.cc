@@ -8,8 +8,8 @@
 /*
 	These parameters need to be changed in order to operate the converter
 */
-const std::string controller_filename = "../controllers/dcdc_small_bdd/bdd/controller";
-const std::string new_controller_filename = "../controllers/dcdc_small_bdd/controller";
+const std::string controller_filename = "../controllers/dcdc_large_bdd/bdd/controller";
+const std::string new_controller_filename = "../controllers/dcdc_large_bdd/controller";
 const int state_dim = 2;
 const int input_dim = 1;
 
