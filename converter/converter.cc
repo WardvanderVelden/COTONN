@@ -1,20 +1,20 @@
 #include <iostream>
 #include <string>
 #include <array>
+#include <math.h> 
 
 #include "scots.hh"
 
 /*
 	These parameters need to be changed in order to operate the converter
 */
-const std::string controller_filename = "../controllers/vehicle_large_bdd/bdd/controller";
-const std::string new_controller_filename = "../controllers/vehicle_large_bdd/controller";
-const int state_dim = 3;
-const int input_dim = 2;
-
+const std::string controller_filename = "../controllers/dcdc_small_bdd/bdd/controller";
+const std::string new_controller_filename = "../controllers/dcdc_small_bdd/controller";
+const int state_dim = 2;
+const int input_dim = 1;
 
 /*
-
+	Actual program
 */
 const bool debug_mode = false;
 
@@ -77,6 +77,7 @@ std::vector<ControllerPoint> find_winning_domain(scots::SymbolicSet &controller,
 	std::vector<ControllerPoint> winning_domain;
 
 	auto size = ss.size();
+
 	for(unsigned int s = 0; s < size; s++) {
 		// read x at state
 		state_type x;

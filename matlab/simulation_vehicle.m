@@ -34,7 +34,7 @@ outputs = tmp(2);
 
 
 %% simulation parameters
-tau = 0.3;
+tau = 0.01;
 s = [0.6 0.6 0];
 
 s_list = s;
