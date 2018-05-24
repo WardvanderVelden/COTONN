@@ -4,7 +4,7 @@ import numpy as np
 # Exporter class responsible for exporting to files
 class Exporter:
     def __init__(self, version):
-        self.save_location = "./nn/"
+        self.save_location = "./saves/"
         self.version = version
       
       

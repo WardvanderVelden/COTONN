@@ -1,8 +1,12 @@
+import sys
+sys.path.insert(0, "./src/")
+
 from Importer import Importer
 from Exporter import Exporter
 from NeuralNetworkManager import NeuralNetworkManager
 from StaticController import StaticController
 from DataSet import DataSet
+from Utilities import Utilities
 
 from NeuralNetworkManager import NNTypes
 from NeuralNetworkManager import NNOptimizer
@@ -15,9 +19,15 @@ class COTONN:
     def __init__(self):
         self.version = "0.5.4"
         
+        self.utils = Utilities()
+        self.save_path = "./controllers/nn/" + self.utils.getTimestamp() + "/"
+        
         self.importer = Importer()
         self.exporter = Exporter(self.version)
+        self.exporter.setSaveLocation(self.save_path)
+        
         self.nnm = NeuralNetworkManager()
+        self.nnm.setSaveLocation(self.save_path)
         self.staticController = StaticController()
         
         self.debug_mode = False
@@ -66,7 +76,6 @@ class COTONN:
         self.nnm.randomCheck(fullSet)
 
         if(save_option):
-            self.exporter.setSaveLocation("./nn/")
             self.exporter.saveNetwork(self.nnm)
             self.exporter.saveWrongStates(wrong_states)
             self.exporter.saveMatlabMLP(self.staticController, self.nnm)
@@ -110,7 +119,6 @@ class COTONN:
         self.nnm.randomCheck(fullSet)
         
         if(save_option):
-            self.exporter.setSaveLocation("./nn/")
             self.exporter.saveNetwork(self.nnm)
             self.exporter.saveWrongStates(wrong_states)
             self.exporter.saveMatlabMLP(self.staticController, self.nnm)
@@ -195,7 +203,6 @@ class COTONN:
 
         # Save Network or Variables
         if(save_option):
-            self.exporter.setSaveLocation("./nn/")
             self.exporter.saveNetwork(self.nnm)
             self.exporter.saveWrongStates(wrong_states)
             self.exporter.saveMatlabMLP(self.staticController, self.nnm)
@@ -232,7 +239,6 @@ class COTONN:
         self.nnm.randomCheck(fullSet)
 
         if(save_option):
-            self.exporter.setSaveLocation("./nn/")
             self.exporter.saveNetwork(self.nnm)
             self.exporter.saveWrongStates(wrong_states)
             self.exporter.saveMatlabMLP(self.staticController, self.nnm)
@@ -245,8 +251,7 @@ class COTONN:
 
 
 cotonn = COTONN()
-
-cotonn.customFullSetMLP("controllers/dcdc_small/controller", [40, 40], 0.02, 0.10, 1.0, 400, 1000)
+cotonn.fullSetMLP("controllers/dcdc_small/simple", 2, 4, 0.02, 0.10, 1.0, 100, 1000)
 #cotonn.importMLP("./nn/model", "controllers/vehicle/controller", 2, 2**8, 0.01, 0.05, 0.95, 100, 1000, save_option=True)
 
 
