@@ -201,10 +201,59 @@ class COTONN:
             self.exporter.saveMatlabMLP(self.staticController, self.nnm)
             
         self.nnm.close()
+
+
+ # Generate MLP from fullset
+    def customFullSetMLP(self, filename, layer, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step, save_option=True):
+        self.staticController = self.importer.readStaticController(filename)
+        
+        fullSet = DataSet()
+        fullSet.readSetFromController(self.staticController)
+        fullSet.formatToBinary()
+        
+        self.nnm.setDebugMode(True)
+        self.nnm.setType(NNTypes.MLP)
+        self.nnm.setTrainingMethod(NNOptimizer.Adam)
+        self.nnm.setActivationFunction(NNActivationFunction.Sigmoid)
+        self.nnm.setDataSet(fullSet)
+        
+        self.nnm.setDropoutRate(dropout_rate)
+        self.nnm.customHiddenLayers(layer)
+        self.nnm.initialize(learning_rate, fitness_threshold, batch_size, display_step, -1, 5000)
+        
+        self.nnm.getDataSize()
+        
+        # Train model and visualize performance
+        self.nnm.train()
+        
+        self.nnm.plot()
+
+        fitness, wrong_states = self.nnm.checkFitness(fullSet)
+        self.nnm.randomCheck(fullSet)
+
+        if(save_option):
+            self.exporter.setSaveLocation("./nn/")
+            self.exporter.saveNetwork(self.nnm)
+            self.exporter.saveWrongStates(wrong_states)
+            self.exporter.saveMatlabMLP(self.staticController, self.nnm)
+            self.exporter.saveBinary(self.nnm)
+
+        self.nnm.close()
         
         self.cleanMemory()
 
 
+
 cotonn = COTONN()
-cotonn.fullSetMLP("controllers/vehicle_large_bdd/controller", 4, 2**7, 0.01, 0.05, 1.0, 100, 1000)
+
+cotonn.customFullSetMLP("controllers/dcdc_small/controller", [40, 40], 0.02, 0.10, 1.0, 400, 1000)
 #cotonn.importMLP("./nn/model", "controllers/vehicle/controller", 2, 2**8, 0.01, 0.05, 0.95, 100, 1000, save_option=True)
+
+
+
+
+
+
+
+
+

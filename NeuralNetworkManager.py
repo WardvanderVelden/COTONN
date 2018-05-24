@@ -127,6 +127,21 @@ class NeuralNetworkManager:
         for i in range(width):
             self.layers.append(height)
         self.layers.append(self.data_set.getYDim())
+  
+      
+    #Customize layer sturcture
+    def customHiddenLayers(self, layer):
+        self.layers = []
+        
+        x_dim = self.data_set.getXDim()
+        y_dim = self.data_set.getYDim()
+        
+        self.layers.append(x_dim)
+        for i in range(1, len(layer)+1):
+            self.layers.append(layer[i-1])
+        self.layers.append(y_dim)
+        
+        return self.layers
 
 
      # Initialize neural network
