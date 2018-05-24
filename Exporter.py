@@ -11,6 +11,7 @@ class Exporter:
     def setSaveLocation(self, value): self.save_location = value
       
       
+    # Save network graph
     def saveNetwork(self, nnm):
           # Create a saver
         self.network_saver = tf.train.Saver()
@@ -18,9 +19,10 @@ class Exporter:
             
         # Save the given session      
         self.network_saver.save(session, self.save_location + "model")  
-        print("\nModel saved in path: " + self.save_location + "model")
+        print("\nModel saved to path: " + self.save_location + "model")
     
     
+    # Save network variables
     def saveVariables(self, nnm, list_variables): 
         # Create a saver
         self.saver = tf.train.Saver(list_variables)
@@ -28,11 +30,12 @@ class Exporter:
         
         # Save the given session      
         self.saver.save(session, self.save_location + "variable")
-        print("\nVariables saved in path: " + self.save_location + "variable")
+        print("Variables saved to path: " + self.save_location + "variable")
     
     
+    # Save variables as text
     def saveRawMLP(self, nnm):
-        file = open(self.save_location + "nn.cot", "w")
+        file = open(self.save_location + "nn.txt", "w")
         file.write("COTONN v" + self.version + " raw NN:\n")
         
         session = nnm.nn.session
@@ -53,8 +56,10 @@ class Exporter:
                 np.savetxt(file, bias_eval)
                 
         file.close()
-        print("\nRaw MLP saved to path: " + self.save_location + "nn.cot")
+        print("Raw MLP saved to path: " + self.save_location + "nn.txt")
         
+    
+    # Save neural network in a very simple format that is executable as a MATLAB script
     def saveMatlabMLP(self, controller, nnm):
         file = open(self.save_location + "nn.m", "w")
         
@@ -103,9 +108,39 @@ class Exporter:
                 file.write("];\n")
                 
         file.close()
-        print("\nMatlab MLP saved to path: " + self.save_location + "nn.m")
+        print("Matlab MLP saved to path: " + self.save_location + "nn.m")
+        
+        
+    # Save as a binary dump (smallest representation)
+    def saveBinary(self, nnm):
+        file = open(self.save_location + "nn.cot","wb")
+        
+        session = nnm.nn.session
+        layers = nnm.nn.layers
+        
+        for i in range (len(layers) - 1):
+            with tf.variable_scope("layer_" + str(i), reuse=True):
+                weight = tf.get_variable("kernel")
+                bias = tf.get_variable("bias")
+                
+                weight_eval = session.run(weight)
+                bias_eval = session.run(bias)
+                
+                weight_shape = session.run(tf.shape(weight))
+                bias_shape = session.run(tf.shape(bias))
+                
+                file.write(int(weight_shape[0]).to_bytes(4, "little"))
+                file.write(int(weight_shape[1]).to_bytes(4, "little"))
+                file.write(weight_eval.tostring())
+                
+                file.write(int(bias_shape[0]).to_bytes(4, "little"))
+                file.write(bias_eval.tostring())
+                
+        print("Binary saved to path: " + self.save_location + "nn.cot")
+        file.close()                
     
     
+    # Save wrong states as a text file
     def saveWrongStates(self, wrong_states):
         file = open(self.save_location + "wrong_states.txt", "w")
         file.write("COTONN v" + self.version + " Wrong states (#" + str(len(wrong_states)) + "): \n")
@@ -117,5 +152,4 @@ class Exporter:
             
         file.close()
         
-        print("\nWrong states saved to path: " + self.save_location + "wrong_states.txt")
-
+        print("Wrong states saved to path: " + self.save_location + "wrong_states.txt")

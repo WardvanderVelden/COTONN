@@ -35,12 +35,12 @@ outputs = tmp(2);
 
 %% simulation parameters
 tau = 0.5;
-s = [0.7 5.2];
+s = [0.7 5.4];
 
 s_list = s;
 u_list = [];
 
-loop = 300;
+loop = 150;
 
 
 %% simulate system
