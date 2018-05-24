@@ -1,7 +1,10 @@
 # Test environment for optimizing the fitness function in COTONN
 # and testing some tensorboard functionality
 
-# imports
+# 
+import sys
+sys.path.insert(0, "./src/")
+
 import tensorflow as tf 
 from DataSet import DataSet
 from Importer import Importer

@@ -2,6 +2,9 @@
 # and testing some tensorboard functionality
 
 # imports
+import sys
+sys.path.insert(0, "./src/")
+
 import tensorflow as tf 
 from tensorflow.contrib import rnn
 from DataSet import DataSet
