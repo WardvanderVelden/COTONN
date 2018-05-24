@@ -189,9 +189,9 @@ vector<float> x2bin(state_type x) {
 	int id = 0;
 	for(ushort i = 0; i < s_dim; i++) {
 		auto d_id = x[i] - s_ll[i];
-		id += (d_id+s_eta[i]/2.0)/s_eta[i]*s_ipd[i];
+		id += floor((d_id+s_eta[i]/2.0)/s_eta[i])*s_ipd[i];
 	}
-	std::cout << std::to_string(id) << std::endl;
+	//std::cout << std::to_string(id) << std::endl;
 
 	// get binary
 	string binary = std::bitset<64>(id).to_string(); 
@@ -249,10 +249,10 @@ ushort bin2x(vector<float> bin) {
 int main() {
 	calculateGridHelpers();
 
-	state_type x = {{0.7, 5.4}};
+	state_type x = {{0.6, 5.3}};
 
 	// simulation loop
-	for(ushort i = 0; i < 10; i++) {
+	for(ushort i = 0; i < 100; i++) {
 		// get binary state from state space
 		auto bin = x2bin(x);
 
