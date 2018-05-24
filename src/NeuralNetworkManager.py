@@ -69,7 +69,7 @@ class NeuralNetworkManager:
         self.fitnesses = []
         self.iterations = []
         
-        self.tensorboard_log_path = './nn/log/'
+        self.save_location = './nn/log/'
         
 
     # Getters and setters
@@ -200,10 +200,8 @@ class NeuralNetworkManager:
         self.initializeNeuralNetwork()
         self.initializeFitnessFunction()
         self.initializeTraining(learning_rate, fitness_threshold, batch_size, display_step, epoch_threshold, shuffle_rate)
-        
-        utils = Utilities()
-        time_stamp = utils.getTimestamp()
-        self.train_writer = tf.summary.FileWriter(self.tensorboard_log_path + time_stamp, self.nn.session.graph)
+
+        self.train_writer = tf.summary.FileWriter(self.save_location, self.nn.session.graph)
         
         
     # Check a state against the dataset and nn by using its id in the dataset
