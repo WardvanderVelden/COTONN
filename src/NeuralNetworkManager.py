@@ -49,6 +49,7 @@ class NeuralNetworkManager:
         self.training = True
         self.learning_rate = 0.1
         self.fitness_threshold = 0.75
+        self.epoch_threshold = -1
         self.batch_size = 100
         self.shuffle_rate = 2500
         self.display_step = 1000
@@ -93,7 +94,7 @@ class NeuralNetworkManager:
     def setFitnessThreshold(self, value): self.fitness_threshold = value
     def setBatchSize(self, value): self.batch_size = value
     def setDisplayStep(self, value): self.display_step = value
-    def setEpochThreshold(self, keep_probability): self.epoch_threshold = keep_probability
+    def setEpochThreshold(self, value): self.epoch_threshold = value
     def setDropoutRate(self, value): self.dropout_rate = value
     def setShuffleRate(self, value): self.shuffle_rate = value
     def setSaveLocation(self, value): self.save_location = value

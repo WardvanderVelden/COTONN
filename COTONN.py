@@ -252,7 +252,7 @@ class COTONN:
 cotonn = COTONN()
 #cotonn.fullSetMLP("controllers/vehicle_small_bdd/controller", 2, 128, 0.01, 0.05, 1.0, 100, 1000)
 #cotonn.subSetMLP("controllers/vehicle_small_bdd/controller", 0.5, 2, 128, 0.01, 0.05, 1.0, 100, 1000)
-cotonn.fullSetMLP("controllers/vehicle_large/controller", 2, 64, 0.01, 0.05, 1.0, 100, 1000)
+cotonn.fullSetMLP("controllers/vehicle_large/controller", 2, 256, 0.01, 0.05, 1.0, 200, 1000)
 #cotonn.importMLP("./nn/model", "controllers/vehicle/controller", 2, 2**8, 0.01, 0.05, 0.95, 100, 1000, save_option=True)
 
 
