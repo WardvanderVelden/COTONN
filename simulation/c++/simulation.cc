@@ -252,7 +252,7 @@ int main() {
 	state_type x = {{0.6, 5.3}};
 
 	// simulation loop
-	for(ushort i = 0; i < 100; i++) {
+	for(ushort i = 0; i < 250; i++) {
 		// get binary state from state space
 		auto bin = x2bin(x);
 

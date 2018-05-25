@@ -91,14 +91,14 @@ plot(s_list(:,1),s_list(:,2),'k.-','color',colors(1,:),'markersize',1)
 % plot initial state
 plot(s_list(1,1), s_list(1,2),'.','color',colors(5,:),'markersize',20)
 
-% plot boundary
-v = [s_ll(1) s_ll(2);...
-     s_ur(1) s_ll(2);...
-     s_ll(1) s_ur(2);...
-     s_ur(1) s_ur(2)];
-patch('vertices',v,'faces',[1 2 4 3],'facecolor','none','edgec',colors(2,:),'linew',1)
+% % plot boundary
+% v = [s_ll(1) s_ll(2);...
+%      s_ur(1) s_ll(2);...
+%      s_ll(1) s_ur(2);...
+%      s_ur(1) s_ur(2)];
+% patch('vertices',v,'faces',[1 2 4 3],'facecolor','none','edgec',colors(2,:),'linew',1)
 
 grid on
-axis([s_ll(1)-0.1 s_ur(1)+0.1 s_ll(2)-0.1 s_ur(2)+0.1])
+axis([s_ll(1)-0.5 s_ur(1)+0.5 s_ll(2)-0.5 s_ur(2)+0.5])
 
 
