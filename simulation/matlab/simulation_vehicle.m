@@ -34,13 +34,19 @@ outputs = tmp(2);
 
 
 %% simulation parameters
-tau = 0.01;
-s = [0.6 0.6 0];
+tau = 0.3;
+%s = [0.6 0.6 0]; line_color = 1;
+%s = [1.5 0.6 0]; line_color = 3;
+s = [6.3 9 0]; line_color = 5;
 
 s_list = s;
 u_list = [];
 
-loop = 10000;
+loop = 250;
+
+% target set
+lb=[9 0];
+ub=lb+0.5;
 
 
 %% simulate system
@@ -59,6 +65,11 @@ while(loop>0)
        disp("State is out of controller bounds")
        break
     end
+    
+    % stop when goal is reached
+    if (lb(1) <= s(end,1) & s(end,1) <= ub(1) && lb(2) <= s(end,2) & s(end,2) <= ub(2))
+        break;
+    end 
         
     % get state binary
     s_bin = x2bin(s, s_ipd, s_eta, s_ll, inputs);
@@ -71,34 +82,22 @@ while(loop>0)
 
     % numerically integrate one tau
     u_list = [u_list; u];
-    [t s] = ode45(@ode_vehicle, [0 tau], s, odeset('abstol', 1e-10, 'reltol', 1e-10), u);
-    s_list = [s_list; s];
+    [t s] = ode45(@ode_vehicle, [0 tau], s_list(end,:), odeset('abstol',1e-12,'reltol',1e-12), u);
+    s_list = [s_list; s(end,:)];
     
     loop = loop - 1;
 end
 
 %% plot system
 colors = get(groot, 'DefaultAxesColorOrder');
-box on
-
-% plot domain
-hold on
-plot([s_ll(1) s_ur(1)],[s_ll(2) s_ur(2)],'.','color',0.6*ones(3,1))
 
 % plot trajectory
-plot(s_list(:,1),s_list(:,2),'k.-','color',colors(1,:),'markersize',1)
+hold on
+plot(s_list(:,1),s_list(:,2),'k.-','color',colors(line_color,:))
+plot(s_list(1,1),s_list(1,2),'.','color',zeros(1,3),'markersize',20)
+hold on
 
-% plot initial state
-plot(s_list(1,1), s_list(1,2),'.','color',colors(5,:),'markersize',20)
-
-% % plot boundary
-% v = [s_ll(1) s_ll(2);...
-%      s_ur(1) s_ll(2);...
-%      s_ll(1) s_ur(2);...
-%      s_ur(1) s_ur(2)];
-% patch('vertices',v,'faces',[1 2 4 3],'facecolor','none','edgec',colors(2,:),'linew',1)
-
-grid on
-axis([s_ll(1)-0.5 s_ur(1)+0.5 s_ll(2)-0.5 s_ur(2)+0.5])
+box on
+axis([-.5 10.5 -.5 10.5])
 
 
