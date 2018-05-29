@@ -1,2 +1,2 @@
 # COTONN
-A toolchain for converting correct-by-design controllers into neural networks
+A toolchain for converting deterministic correct-by-design controllers into neural networks. Program has mainly used and been tested using controllers generated with SCOTS. Both look-up table and BDD format controllers are supported. For the use of the BDD controllers they will first need to be converted to look-up tables so the data is available for training. To do so use the converter tool included in the program.
