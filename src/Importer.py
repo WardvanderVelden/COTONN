@@ -30,16 +30,16 @@ class Importer:
             # Retrieve the number of dimensions from the text file
             ctl.setStateSpaceDim(self.getLine("MEMBER:DIM\n", "\n#VECTOR:ETA\n"))
             if(self.debug_mode):
-                print("This is the dimension of the SPACE_STATE:\n", ctl.getStateSpaceDim())
+                print("This is the dimension of the SPACE_STATE:\n", str(ctl.getStateSpaceDim()))
             
             # Retrieve the number of eta's from the text file 
-            ctl.setStateSpaceEtas(self.getLine(("#VECTOR:ETA\n#BEGIN:" + ctl.getStateSpaceDim() + "\n"), "\n#END").split('\n'))
+            ctl.setStateSpaceEtas(self.getLine(("#VECTOR:ETA\n#BEGIN:" + str(ctl.getStateSpaceDim()) + "\n"), "\n#END").split('\n'))
             if(self.debug_mode):
                 print("These are the etas of the SPACE_STATE:\n", ctl.getStateSpaceEtas())
             
             # Retrieve the borders from the text file
-            state_space_lower_left = self.getLine("#VECTOR:LOWER_LEFT\n#BEGIN:" + ctl.getStateSpaceDim() + "\n", "\n#END\n#VECTOR:UPPER_RIGHT").split('\n')
-            state_space_upper_right = self.getLine("#VECTOR:UPPER_RIGHT\n#BEGIN:" + ctl.getStateSpaceDim() + "\n", "\n#END\n#SCOTS:INPUT_SPACE").split('\n')
+            state_space_lower_left = self.getLine("#VECTOR:LOWER_LEFT\n#BEGIN:" + str(ctl.getStateSpaceDim()) + "\n", "\n#END\n#VECTOR:UPPER_RIGHT").split('\n')
+            state_space_upper_right = self.getLine("#VECTOR:UPPER_RIGHT\n#BEGIN:" + str(ctl.getStateSpaceDim()) + "\n", "\n#END\n#SCOTS:INPUT_SPACE").split('\n')
             ctl.setStateSpaceLowerLeft(state_space_lower_left)
             ctl.setStateSpaceUpperRight(state_space_upper_right)
             if(self.debug_mode):                
@@ -51,16 +51,16 @@ class Importer:
             
             ctl.setInputSpaceDim(self.getLine("#TYPE:UNIFORMGRID\n#MEMBER:DIM\n", "\n#VECTOR:ETA"))
             if(self.debug_mode):
-                print("This is the dimension of the INPUT_SPACE:\n", ctl.getInputSpaceDim())
+                print("This is the dimension of the INPUT_SPACE:\n", str(ctl.getInputSpaceDim()))
             
             # Retrieve the number of eta's from the text file
-            ctl.setInputSpaceEtas(self.getLine(("#VECTOR:ETA\n#BEGIN:" + ctl.getInputSpaceDim() + "\n"), "\n#END").split('\n'))
+            ctl.setInputSpaceEtas(self.getLine(("#VECTOR:ETA\n#BEGIN:" + str(ctl.getInputSpaceDim()) + "\n"), "\n#END").split('\n'))
             if(self.debug_mode):
                 print("These are the etas of the INPUT_SPACE:\n", ctl.getInputSpaceEtas())
             
             # Retrieve the borders from the text file
-            input_space_lower_left = self.getLine("#VECTOR:LOWER_LEFT\n#BEGIN:" + ctl.getInputSpaceDim() + "\n", "\n#END\n#VECTOR:UPPER_RIGHT").split('\n')
-            input_space_upper_right = self.getLine("#VECTOR:UPPER_RIGHT\n#BEGIN:" + ctl.getInputSpaceDim() + "\n", "\n#END\n#TYPE:WINNINGDOMAIN").split('\n')
+            input_space_lower_left = self.getLine("#VECTOR:LOWER_LEFT\n#BEGIN:" + str(ctl.getInputSpaceDim()) + "\n", "\n#END\n#VECTOR:UPPER_RIGHT").split('\n')
+            input_space_upper_right = self.getLine("#VECTOR:UPPER_RIGHT\n#BEGIN:" + str(ctl.getInputSpaceDim()) + "\n", "\n#END\n#TYPE:WINNINGDOMAIN").split('\n')
             ctl.setInputSpaceLowerLeft(input_space_lower_left)
             ctl.setInputSpaceUpperRight(input_space_upper_right)
             if(self.debug_mode):                
@@ -80,8 +80,9 @@ class Importer:
                 u = int(split_data[1].replace(' ',''))
                 ctl.setStateInput(s, u)
                       
-            # Calculate controller size
+            # Calculate controller size and space grid helpers for vector accessing
             ctl.setSize()
+            ctl.calculateSpaceHelpers()
                   
             return ctl
       

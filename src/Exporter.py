@@ -67,27 +67,27 @@ class Exporter:
         layers = nnm.nn.layers
         
         file.write("s_eta = [")
-        for x in controller.getStateSpaceEtas(): file.write(x + " ")
+        for x in controller.getStateSpaceEtas(): file.write(str(x) + " ")
         file.write("];\n")
         
         file.write("s_ll = [")
-        for x in controller.getStateSpaceLowerLeft(): file.write(x + " ")
+        for x in controller.getStateSpaceLowerLeft(): file.write(str(x) + " ")
         file.write("];\n")
         
         file.write("s_ur = [")
-        for x in controller.getStateSpaceUpperRight(): file.write(x + " ")
+        for x in controller.getStateSpaceUpperRight(): file.write(str(x) + " ")
         file.write("];\n")
         
         file.write("\nu_eta = [")
-        for x in controller.getInputSpaceEtas(): file.write(x + " ")
+        for x in controller.getInputSpaceEtas(): file.write(str(x) + " ")
         file.write("];\n")
         
         file.write("u_ll = [")
-        for x in controller.getInputSpaceLowerLeft(): file.write(x + " ")
+        for x in controller.getInputSpaceLowerLeft(): file.write(str(x) + " ")
         file.write("];\n")
         
         file.write("u_ur = [")
-        for x in controller.getInputSpaceUpperRight(): file.write(x + " ")
+        for x in controller.getInputSpaceUpperRight(): file.write(str(x) + " ")
         file.write("];\n")
 
         

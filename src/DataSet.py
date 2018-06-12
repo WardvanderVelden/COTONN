@@ -52,6 +52,7 @@ class DataSet:
         self.y.append(y)
         self.size = len(self.x)
         
+        
     # Read dataset from controller
     def readSetFromController(self, controller):
         for i in range(controller.getSize()):
@@ -70,6 +71,7 @@ class DataSet:
         utils = Utilities()
         print("Dataset size: " + str(self.size) + " - " + utils.formatBytes(self.size*2*4) + " (int32)")
             
+        
     # Read pseudo random subset from controller
     def readSubsetFromController(self, controller, percentage):
         size = controller.getSize()
@@ -164,3 +166,23 @@ class DataSet:
             self.y_eta.append(0.5)
         
         self.size = len(self.x)
+        
+    
+    # Format the dataset to compressed state and compressed input vectors
+    def formatToVector(self, controller):
+        #for i in range(self.size):
+        new_x = []
+        new_y = []
+        
+        for i in range(self.size):
+            # get pair
+            pair = controller.getVectorPairFromIndex(id)
+            
+            # compress pair using boundaries
+            
+            
+            # append 
+            new_x.append(pair[0])
+            new_y.append(pair[1])
+            
+        

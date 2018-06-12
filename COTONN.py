@@ -210,7 +210,7 @@ class COTONN:
         self.nnm.close()
 
 
- # Generate MLP from fullset
+    # Generate MLP from fullset
     def customFullSetMLP(self, filename, layer, learning_rate, dropout_rate, fitness_threshold, batch_size, display_step, save_option=True):
         self.staticController = self.importer.readStaticController(filename)
         
@@ -247,10 +247,19 @@ class COTONN:
         self.nnm.close()
         
         self.cleanMemory()
+        
+    # Experimental functions    
+    def experimental(self):
+        self.staticController = self.importer.readStaticController("controllers/dcdc_small/controller")
+        
+        fullSet = DataSet()
+        fullSet.readSetFromController(self.staticController)
+        fullSet.formatToVector(self.staticController)
 
 
 cotonn = COTONN()
-#cotonn.fullSetMLP("controllers/vehicle_small_bdd/controller", 2, 128, 0.01, 0.05, 1.0, 100, 1000)
+cotonn.experimental()
+#cotonn.fullSetMLP("controllers/dcdc_small/controller", 2, 16, 0.005, 0.05, 1.0, 100, 1000)
 #cotonn.subSetMLP("controllers/vehicle_small_bdd/controller", 0.5, 2, 128, 0.01, 0.05, 1.0, 100, 1000)
 #cotonn.importMLP("./nn/model", "controllers/vehicle/controller", 2, 2**8, 0.01, 0.05, 0.95, 100, 1000)
 
