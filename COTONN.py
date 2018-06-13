@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 # Main class from which all functions are called
 class COTONN:
     def __init__(self):
-        self.version = "0.5.4"
+        self.version = "0.6.0"
         
         self.utils = Utilities()
         self.save_path = "./controllers/nn/" + self.utils.getTimestamp() + "/"
@@ -250,12 +250,41 @@ class COTONN:
         
     # Experimental functions    
     def experimental(self):
-        self.staticController = self.importer.readStaticController("controllers/dcdc_small/controller")
+        self.staticController = self.importer.readStaticController("controllers/vehicle_small/controller")
         
         fullSet = DataSet()
         fullSet.readSetFromController(self.staticController)
         fullSet.formatToVector(self.staticController)
+        
+        self.nnm.setDebugMode(True)
+        self.nnm.setType(NNTypes.MLP)
+        self.nnm.setTrainingMethod(NNOptimizer.Adam)
+        self.nnm.setActivationFunction(NNActivationFunction.Sigmoid)
+        self.nnm.setDataSet(fullSet)
+        
+        self.nnm.setDropoutRate(0.05)
+        self.nnm.rectangularHiddenLayers(3, 60)
+        self.nnm.initialize(0.01, 1.0, 100, 1000, -1, 5000)
+        
+        self.nnm.getDataSize()
+        
+        self.nnm.train()
+        
+        self.nnm.plot()
 
+        # Validate neural network
+        fitness, wrong_states = self.nnm.checkFitness(fullSet, self.staticController)
+        self.nnm.randomCheck(fullSet)
+
+        # Save
+        self.exporter.saveNetwork(self.nnm)
+        self.exporter.saveWrongStates(wrong_states)
+        self.exporter.saveMatlabMLP(self.staticController, self.nnm)
+        self.exporter.saveBinary(self.nnm)
+
+        self.nnm.close()
+        
+        self.cleanMemory()
 
 cotonn = COTONN()
 cotonn.experimental()

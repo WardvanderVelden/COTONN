@@ -225,7 +225,7 @@ class NeuralNetworkManager:
     
     # Check fitness of the neural network for a specific dataset and return wrong states
     # as of right now it assumes a binary encoding of the dataset
-    def checkFitness(self, data_set):
+    def checkFitness(self, data_set, controller = None):
         self.data_set = data_set
         
         size = self.data_set.getSize()
@@ -243,7 +243,10 @@ class NeuralNetworkManager:
             equal = True
             for j in range(y_dim):
                 if(not((y[i][j] - y_eta[j]) <= estimation[i][j] and (y[i][j] + y_eta[j]) > estimation[i][j]) and equal):
-                    wrong.append(self.bed.baton(x[i]))
+                    if(data_set.binary_format):
+                        wrong.append(self.bed.baton(x[i]))
+                    elif(data_set.vector_format):
+                        wrong.append(controller.getIdFromStateVector(x[i]))
                     fit -= 1
                     equal = False
                     

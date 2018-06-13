@@ -29,11 +29,15 @@ class StaticController:
     def getStateSpaceEtas(self): return self.state_space_etas
     def getStateSpaceLowerLeft(self): return self.state_space_lower_left
     def getStateSpaceUpperRight(self): return self.state_space_upper_right
+    def getStateSpaceNGP(self): return self.state_space_ngp
+    def getStateSpaceIPD(self): return self.state_space_ipd
     
     def getInputSpaceDim(self): return self.input_space_dim
     def getInputSpaceEtas(self): return self.input_space_etas
     def getInputSpaceLowerLeft(self): return self.input_space_lower_left
     def getInputSpaceUpperRight(self): return self.input_space_upper_right
+    def getInputSpaceNGP(self): return self.input_space_ngp
+    def getInputSpaceIPD(self): return self.input_space_ipd
     
     def getState(self, id): return self.states[id]
     def getInput(self, id): return self.inputs[id]
@@ -105,16 +109,31 @@ class StaticController:
     def getStateVector(self, state_id):
         i = self.state_space_dim - 1
         x = [0.0]*self.state_space_dim
+        
         while (i>0):
             num = math.floor(state_id/self.state_space_ipd[i])
             state_id = state_id % self.state_space_ipd[i]
-            x[i] = self.state_space_lower_left[i]+num*self.state_space_etas[i]
+            x[i] = self.state_space_lower_left[i] + num*self.state_space_etas[i]
             
             i -= 1
             
-        num = state_id
-        x[0] = self.state_space_lower_left[0]+num*self.state_space_etas[0];
+        x[0] = self.state_space_lower_left[0] + state_id*self.state_space_etas[0];
         return x
+    
+    
+    # Get state id from the state vector # NOT CORRECT
+    def getIdFromStateVector(self, state_vector):
+        ss_eta = self.getStateSpaceEtas()
+        ss_ll = self.getStateSpaceLowerLeft()
+        ss_dim = self.getStateSpaceDim()
+        ss_ipd = self.getStateSpaceIPD()
+        
+        id = 0
+        for i in range(ss_dim):
+            d_i = state_vector[i] - ss_ll[i]
+            id = id + math.floor((d_i + ss_eta[i]/2.0)/ss_eta[i])*ss_ipd[i]
+            
+        return id
         
         
     # Get input vector
@@ -125,12 +144,11 @@ class StaticController:
         while (i>0):
             num = math.floor(input_id/self.input_space_ipd[i])
             input_id = input_id % self.input_space_ipd[i]
-            u[i] = self.state_space_lower_left[i]+num*self.input_space_etas[i]
+            u[i] = self.input_space_lower_left[i] + num*self.input_space_etas[i]
             
             i -= 1
-            
-        num = input_id
-        u[0] = self.input_space_lower_left[0]+num*self.input_space_etas[0];  
+
+        u[0] = self.input_space_lower_left[0] + input_id*self.input_space_etas[0];  
         return u
     
         
@@ -187,12 +205,11 @@ class StaticController:
         self.input_space_ipd = [1]*self.input_space_dim
         
         for i in range(self.state_space_dim):
-            self.state_space_ngp[i] = (self.state_space_upper_right[i] - self.state_space_lower_left[i])/self.state_space_etas[i] + 1
+            self.state_space_ngp[i] = int((self.state_space_upper_right[i] - self.state_space_lower_left[i])/self.state_space_etas[i] + 1)
             if(i != 0):
-                self.state_space_ipd[i] = self.state_space_ipd[i-1]*self.state_space_ngp[i-1]
+                self.state_space_ipd[i] = int(self.state_space_ipd[i-1]*self.state_space_ngp[i-1])
 
         for i in range(self.input_space_dim):
-            self.input_space_ngp[i] = (self.input_space_upper_right[i] - self.input_space_lower_left[i])/self.input_space_etas[i] + 1
+            self.input_space_ngp[i] = int((self.input_space_upper_right[i] - self.input_space_lower_left[i])/self.input_space_etas[i] + 1)
             if(i != 0):
-                self.input_space_ipd[i] = self.input_space_ipd[i-1]*self.input_space_ngp[i-1]
-        
+                self.input_space_ipd[i] = int(self.input_space_ipd[i-1]*self.input_space_ngp[i-1])

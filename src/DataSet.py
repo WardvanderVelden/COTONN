@@ -20,6 +20,10 @@ class DataSet:
         
         self.size = 0 # amount of elements in dataset
         
+        self.binary_format = False
+        self.vector_format = False
+        self.id_format = True
+        
     # Getters
     def getX(self, i): return self.x[i]
     def getY(self, i): return self.y[i]
@@ -167,22 +171,76 @@ class DataSet:
         
         self.size = len(self.x)
         
+        self.binary_format = True
+        self.id_format = False
+        
     
     # Format the dataset to compressed state and compressed input vectors
     def formatToVector(self, controller):
-        #for i in range(self.size):
         new_x = []
         new_y = []
         
+        ss_dim = controller.getStateSpaceDim()
+        ss_ll = controller.getStateSpaceLowerLeft()
+        ss_ur = controller.getStateSpaceUpperRight()
+        ss_ngp = controller.getStateSpaceNGP()
+
+        is_dim = controller.getInputSpaceDim()
+        is_ll = controller.getInputSpaceLowerLeft()
+        is_ur = controller.getInputSpaceUpperRight()
+        is_ngp = controller.getInputSpaceNGP()
+        
+        self.x_bounds = [ss_ll, ss_ur]
+        self.y_bounds = [is_ll, is_ur]
+        
+        self.x_dim = ss_dim
+        self.y_dim = is_dim
+        
         for i in range(self.size):
             # get pair
-            pair = controller.getVectorPairFromIndex(id)
+            pair = controller.getVectorPairFromIndex(i) # make it dependent on the dataset instead of the controller
+            state_vector = pair[0]
+            input_vector = pair[1]
             
             # compress pair using boundaries
-            
+            for j in range(ss_dim):
+                x = state_vector[j]
+                state_vector[j] = (x - ss_ll[j])/(ss_ur[j] - ss_ll[j])
+                if(state_vector[j] < 0 or state_vector[j] > 1):
+                    print("State vector is out of range")
+                    print(str(state_vector[j]))
+                    print(str(x))
+                    print(str(x - ss_ll[j]) + " " + str(ss_ur[j] - ss_ll[j]))
+                    return
+                
+            for j in range(is_dim):
+                u  = input_vector[j]
+                input_vector[j] = (u - is_ll[j])/(is_ur[j] - is_ll[j])
+                if(input_vector[j] < 0 or input_vector[j] > 1):
+                    print("Input vector is out of range")
+                    print(str(input_vector[j]))
+                    print(str(u))
+                    print(str(u - is_ll[j]) + " " + str(is_ur[j] - is_ll[j]))
+                    return
             
             # append 
-            new_x.append(pair[0])
-            new_y.append(pair[1])
+            new_x.append(state_vector)
+            new_y.append(input_vector)
             
+        self.x = new_x
+        self.y = new_y
         
+        # etas
+        self.x_eta = []
+        self.y_eta = []
+        for i in range(ss_dim):
+            self.x_eta.append(1/ss_ngp[i])
+            #print("ss_eta" + str(i) + ": " + str(self.x_eta[i]))
+            
+        for i in range(is_dim):
+            self.y_eta.append(1/is_ngp[i])
+            #print("is_eta" + str(i) + ": " + str(self.y_eta[i]))
+            
+        self.vector_format = True
+        self.id_format = False
+                     
