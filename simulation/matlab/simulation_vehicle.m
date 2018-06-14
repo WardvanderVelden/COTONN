@@ -72,13 +72,16 @@ while(loop>0)
     end 
         
     % get state binary
-    s_bin = x2bin(s, s_ipd, s_eta, s_ll, inputs);
+    %s_bin = x2bin(s, s_ipd, s_eta, s_ll, inputs);
+    s_vec = x2vec(s, s_ipd, s_eta, s_ll, s_ur, inputs);
 
     % get input for given state
-    u_bin = neuralNetwork(s_bin, W, b);
+    %u_bin = neuralNetwork(s_bin, W, b);
+    u_vec = neuralNetwork(s_vec, W, b);
 
     % bin input to input id
-    u = bin2x(u_bin, u_ipd, u_eta, u_ll, outputs);
+    %u = bin2x(u_bin, u_ipd, u_eta, u_ll, outputs);
+    u = vec2x(u_vec, u_ipd, u_eta, u_ll, u_ur, outputs);
 
     % numerically integrate one tau
     u_list = [u_list; u];
