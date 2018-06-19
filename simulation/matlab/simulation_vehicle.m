@@ -5,7 +5,7 @@ clear all
 
 %% load nn
 cd nn
-vehicle
+Vehicle_small_vector_v1
 cd ..
 
 
@@ -35,14 +35,14 @@ outputs = tmp(2);
 
 %% simulation parameters
 tau = 0.3;
-%s = [0.6 0.6 0]; line_color = 1;
+s = [0.6 0.6 0]; line_color = 1;
 %s = [1.5 0.6 0]; line_color = 3;
-s = [6.3 9 0]; line_color = 5;
+%s = [6.3 9 0]; line_color = 5;
 
 s_list = s;
 u_list = [];
 
-loop = 250;
+loop = 2500;
 
 % target set
 lb=[9 0];
@@ -81,7 +81,7 @@ while(loop>0)
 
     % bin input to input id
     %u = bin2x(u_bin, u_ipd, u_eta, u_ll, outputs);
-    u = vec2x(u_vec, u_ipd, u_eta, u_ll, u_ur, outputs);
+    u = vec2x(u_vec, u_dim, u_eta, u_ll, u_ur, outputs);
 
     % numerically integrate one tau
     u_list = [u_list; u];
